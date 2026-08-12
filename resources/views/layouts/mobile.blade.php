@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Ath-Thoifah — Sales Force</title>
 <link rel="manifest" href="/manifest.json">
@@ -18,24 +18,47 @@
     --red:#C23B22; --red-soft:#F7E4DF; --slate:#6B7280; --amber:#B8860B;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+
+  /* PENTING: kunci scroll di html DAN body, bukan cuma body.
+     Kalau cuma body yang overflow:hidden, sebagian browser mobile
+     tetap membiarkan <html> yang scroll dan menu ikut terbawa. */
+  html{
+    height:100%;
+    height:100dvh; /* dynamic viewport height: mengikuti tinggi layar terlihat, bukan tinggi penuh termasuk area address bar */
+    overflow:hidden;
+  }
   body{
+    margin:0; padding:0;
+    height:100%;
+    height:100dvh;
+    overflow:hidden; /* Mencegah double scroll di level body */
     background:#DCD3BE;
     font-family:'Inter',sans-serif;
     color:var(--ink);
     line-height:1.55;
-    min-height:100vh;
     display:flex;
-    align-items:flex-start;
+    align-items:center;
     justify-content:center;
-    padding:28px 12px;
+    padding:20px 12px;
   }
+
   /* Fullscreen di HP asli */
   @media (max-width: 640px) {
-    body{padding:0; background:var(--paper);}
-    .device{border-radius:0; box-shadow:none; width:100%; max-width:100%; min-height:100vh;}
+    body{padding:0; background:var(--paper); align-items:stretch;}
+    .device{
+      border-radius:0;
+      box-shadow:none;
+      width:100%;
+      max-width:100%;
+      height:100vh;   /* fallback untuk browser lama yang belum kenal dvh */
+      height:100dvh;
+      max-height:none;
+      /* viewport-fit=cover + safe-area supaya nav tidak ketutup notch/gesture bar iPhone */
+      padding-bottom:env(safe-area-inset-bottom, 0px);
+    }
     .notch{display:none;}
   }
+
   .display{font-family:'Archivo Black',sans-serif;}
   .condensed{font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:.02em;}
   .mono{font-family:'JetBrains Mono',monospace;}
@@ -44,8 +67,12 @@
     width:420px; max-width:100%; background:var(--paper);
     border-radius:34px;
     box-shadow:0 30px 60px -20px rgba(27,42,65,.45), 0 0 0 10px #14202f;
-    overflow:hidden; position:relative; min-height:860px;
-    display:flex; flex-direction:column;
+    overflow:hidden; position:relative;
+    height:100vh;
+    height:100dvh;
+    max-height:860px;
+    display:flex;
+    flex-direction:column; /* Layout vertikal: topbar - screen(scroll) - nav */
   }
   .notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:150px; height:22px; background:#14202f; border-radius:0 0 16px 16px; z-index:50;}
 
@@ -54,7 +81,7 @@
   .perf::before{left:-21px;} .perf::after{right:-21px;}
   @media (max-width: 640px){ .perf::before, .perf::after{display:none;} }
 
-  .topbar{background:var(--ink); color:var(--paper); padding:34px 20px 16px; position:relative;}
+  .topbar{background:var(--ink); color:var(--paper); padding:34px 20px 16px; position:relative; flex-shrink:0; z-index:10;}
   .topbar .stub{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#9DAEC7;}
   .chip{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px;}
   .chip-done{background:var(--green-soft); color:var(--green);}
@@ -74,7 +101,18 @@
   .navbtn.active .navicon{background:var(--orange);}
   .navicon{width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.08);}
 
-  .screen{flex:1; overflow-y:auto; padding-bottom:8px;}
+  /* INI BAGIAN PENTING UNTUK SCROLL INTERNAL — hanya .screen yang boleh scroll,
+     device dan bottom nav TIDAK BOLEH ikut bergerak. */
+  .screen{
+    flex:1 1 auto;
+    min-height:0;      /* wajib di Flexbox: tanpa ini, flex child dengan overflow-y bisa gagal
+                           membatasi tinggi dan malah mendorong .device jadi lebih tinggi dari layar,
+                           yang ujungnya bikin seluruh body ikut scroll. */
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain; /* mencegah "scroll chaining" ke body saat sudah mentok atas/bawah */
+    padding-bottom:8px;
+  }
   .screen::-webkit-scrollbar{width:0;}
 
   .stamp{border:2px solid var(--green); color:var(--green); font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:11px; padding:3px 10px; border-radius:6px; transform:rotate(-4deg); display:inline-block;}
@@ -85,7 +123,7 @@
 <div x-data="salesApp()" class="device">
   <div class="notch"></div>
 
-  <!-- TOP BAR -->
+  <!-- TOP BAR (flex-shrink:0 -> tidak menyusut, selalu di atas) -->
   <div class="topbar">
     <div class="flex items-center justify-between">
       <div>
@@ -99,13 +137,13 @@
     </div>
   </div>
 
-  <!-- SCREENS DYNAMIC CONTENT -->
+  <!-- SCREEN (flex:1, min-height:0 -> satu-satunya bagian yang scroll) -->
   <div class="screen" style="background:var(--paper);">
     @yield('content')
   </div>
 
-  <!-- BOTTOM NAV -->
-  <div class="flex items-center justify-around py-2.5" style="background:var(--ink); padding-bottom:18px;">
+  <!-- BOTTOM NAV (flex-shrink:0 -> selalu menempel di bawah, tidak ikut scroll) -->
+  <div class="flex items-center justify-around py-2.5" style="background:var(--ink); padding-bottom:18px; flex-shrink:0; z-index:10;">
     <button class="navbtn" :class="tab==='home' && 'active'" @click="tab='home'">
       <span class="navicon">🏠</span> Beranda
     </button>
@@ -115,7 +153,6 @@
     <button class="navbtn" :class="tab==='tasks' && 'active'" @click="tab='tasks'">
       <span class="navicon">✅</span> Tugas
     </button>
-    <!-- Ganti Logout menjadi Akun -->
     <a href="{{ route('profile.edit') }}" class="navbtn">
       <span class="navicon">👤</span> Akun
     </a>
