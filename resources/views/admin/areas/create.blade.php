@@ -1,0 +1,30 @@
+@extends('layouts.app')
+
+@section('title', 'Tambah Area')
+
+@section('content')
+<div class="max-w-2xl mx-auto">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6">Tambah Area Baru</h2>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <form action="{{ route('admin.areas.store') }}" method="POST">
+            @csrf
+            <div class="mb-4">
+                <label class="block text-sm text-gray-700">Kode Area (Contoh: JKT-PSR)</label>
+                <input type="text" name="code" class="w-full border rounded p-2 mt-1" required>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm text-gray-700">Nama Area</label>
+                <input type="text" name="name" class="w-full border rounded p-2 mt-1" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm text-gray-700">Deskripsi</label>
+                <textarea name="description" rows="3" class="w-full border rounded p-2 mt-1"></textarea>
+            </div>
+            <div class="flex justify-end">
+                <a href="{{ route('admin.areas.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2">Batal</a>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
