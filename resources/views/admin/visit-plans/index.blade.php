@@ -8,7 +8,7 @@
         <h2 class="display text-2xl">Visit Planning</h2>
         <p class="text-sm" style="color:var(--slate);">Tugaskan salesman untuk mengunjungi mitra tertentu.</p>
     </div>
-    <a href="{{ route('admin.visit-plans.create') }}" class="btn">+ Tugaskan Kunjungan</a>
+    <a href="{{ route('admin.visit-plans.create') }}" class="btn w-full sm:w-auto text-center">+ Tugaskan Kunjungan</a>
 </div>
 
 @if (session('success'))
@@ -18,34 +18,34 @@
     <div class="card p-4 mb-4" style="background:var(--red-soft); color:var(--red); border:1px solid var(--red);">⚠️ {{ session('error') }}</div>
 @endif
 
-<div class="card overflow-hidden">
-    <!-- Header: Filter Data -->
-    <div class="p-4 border-b flex flex-col md:flex-row justify-between items-center gap-4" style="border-color:var(--border); background:var(--paper-dim);">
-        <div class="condensed">Daftar Jadwal Kunjungan</div>
-        <form method="GET" action="{{ route('admin.visit-plans.index') }}" class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <select name="status" onchange="this.form.submit()" class="text-xs p-1.5 rounded border w-full md:w-auto" style="border-color:var(--border);">
-                <option value="">Semua Status</option>
-                <option value="planned" {{ request('status') == 'planned' ? 'selected' : '' }}>Planned</option>
-                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-            </select>
+<!-- HEADER FILTER (Tampil di semua layar) -->
+<div class="card p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="condensed w-full md:w-auto">Daftar Jadwal Kunjungan</div>
+    <form method="GET" action="{{ route('admin.visit-plans.index') }}" class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+        <select name="status" onchange="this.form.submit()" class="text-xs p-1.5 rounded border w-full sm:w-auto" style="border-color:var(--border);">
+            <option value="">Semua Status</option>
+            <option value="planned" {{ request('status') == 'planned' ? 'selected' : '' }}>Planned</option>
+            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+        </select>
 
-            <select name="employee_id" onchange="this.form.submit()" class="text-xs p-1.5 rounded border w-full md:w-auto" style="border-color:var(--border);">
-                <option value="">Semua Salesman</option>
-                @foreach($employees as $emp)
-                    <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>{{ $emp->full_name }}</option>
-                @endforeach
-            </select>
+        <select name="employee_id" onchange="this.form.submit()" class="text-xs p-1.5 rounded border w-full sm:w-auto" style="border-color:var(--border);">
+            <option value="">Semua Salesman</option>
+            @foreach($employees as $emp)
+                <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>{{ $emp->full_name }}</option>
+            @endforeach
+        </select>
 
-            <select name="customer_id" onchange="this.form.submit()" class="text-xs p-1.5 rounded border w-full md:w-auto" style="border-color:var(--border);">
-                <option value="">Semua Toko Mitra</option>
-                @foreach($customers as $cust)
-                    <option value="{{ $cust->id }}" {{ request('customer_id') == $cust->id ? 'selected' : '' }}>{{ $cust->name }}</option>
-                @endforeach
-            </select>
-        </form>
-    </div>
+        <select name="customer_id" onchange="this.form.submit()" class="text-xs p-1.5 rounded border w-full sm:w-auto" style="border-color:var(--border);">
+            <option value="">Semua Toko Mitra</option>
+            @foreach($customers as $cust)
+                <option value="{{ $cust->id }}" {{ request('customer_id') == $cust->id ? 'selected' : '' }}>{{ $cust->name }}</option>
+            @endforeach
+        </select>
+    </form>
+</div>
 
-    <!-- Table -->
+<!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
+<div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
@@ -88,8 +88,57 @@
             </tbody>
         </table>
     </div>
+    <div class="p-4 border-t" style="border-color:var(--border);">
+        {{ $plans->appends(['status' => request('status'), 'employee_id' => request('employee_id'), 'customer_id' => request('customer_id')])->links() }}
+    </div>
 </div>
-<div class="mt-4">
-    {{ $plans->appends(['status' => request('status'), 'employee_id' => request('employee_id'), 'customer_id' => request('customer_id')])->links() }}
+
+<!-- 2. TAMPILAN MOBILE (Card List) - Hanya muncul di layar HP -->
+<div class="md:hidden space-y-4">
+    @forelse ($plans as $plan)
+    <div class="card p-4">
+        <div class="flex items-start justify-between mb-3">
+            <div>
+                <div class="font-semibold text-base" style="color:var(--ink);">{{ $plan->employee->full_name ?? '-' }}</div>
+                <div class="text-xs mono" style="color:var(--slate);">{{ \Carbon\Carbon::parse($plan->visit_date)->format('d M Y') }}</div>
+            </div>
+            @if($plan->status == 'completed')
+                <span class="badge badge-green">Selesai</span>
+            @else
+                <span class="badge badge-amber">Planned</span>
+            @endif
+        </div>
+        
+        <div class="text-xs space-y-2 mb-4 border-t pt-3" style="border-color:var(--border);">
+            <div class="flex justify-between">
+                <span style="color:var(--slate);">Toko Mitra:</span>
+                <span class="font-semibold text-right">{{ $plan->customer->name ?? '-' }}</span>
+            </div>
+        </div>
+
+        <div class="flex gap-2 border-t pt-3" style="border-color:var(--border);">
+            @if($plan->status !== 'completed')
+                <a href="{{ route('admin.visit-plans.edit', $plan) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Edit</a>
+                <form action="{{ route('admin.visit-plans.destroy', $plan) }}" method="POST" class="inline" onsubmit="return confirm('Batalkan jadwal ini?')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-bold p-2 border rounded" style="border-color:var(--border);">Batalkan</button>
+                </form>
+            @else
+                <div class="w-full text-center text-xs text-gray-400 py-2">Kunjungan Selesai</div>
+            @endif
+        </div>
+    </div>
+    @empty
+    <div class="card p-8 text-center" style="color:var(--slate);">
+        Belum ada jadwal kunjungan sesuai filter.
+    </div>
+    @endforelse
+    
+    <!-- Pagination Mobile -->
+    @if($plans->hasPages())
+    <div class="mt-4">
+        {{ $plans->appends(['status' => request('status'), 'employee_id' => request('employee_id'), 'customer_id' => request('customer_id')])->links() }}
+    </div>
+    @endif
 </div>
 @endsection

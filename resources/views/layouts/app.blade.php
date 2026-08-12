@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Ath-Thoifah') }} — Admin Sales Ops</title>
     
@@ -28,11 +28,20 @@
         ::-webkit-scrollbar-thumb{background:#D5CAAA; border-radius:8px;}
 
         .layout{display:flex; min-height:100vh;}
+        
+        /* PERBAIKAN SIDEBAR: Gunakan 100dvh & tambahkan overflow-y auto */
         .sidebar{
             width:236px; background:var(--ink); color:#E7EAF0; flex-shrink:0;
-            display:flex; flex-direction:column; position:fixed; top:0; height:100vh; z-index:50;
+            display:flex; flex-direction:column; position:fixed; top:0; 
+            height:100vh; /* Fallback untuk browser lama */
+            height:100dvh; /* Dynamic viewport height untuk mobile */
+            z-index:50;
             transition: transform 0.3s ease-in-out;
+            overflow-y: auto; /* Agar sidebar bisa di-scroll jika menu panjang */
+            -webkit-overflow-scrolling: touch; /* Smooth scroll di iOS */
         }
+        .sidebar::-webkit-scrollbar { width: 0; } /* Sembunyikan scrollbar sidebar */
+
         .brand{padding:22px 20px 16px; border-bottom:1px solid rgba(255,255,255,.08);}
         .brand .stub{font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#8FA0BC;}
         .navsec{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#5E7192; padding:22px 20px 8px;}
@@ -44,7 +53,12 @@
         .navitem.active{background:rgba(232,98,44,.12); color:#fff; border-left-color:var(--orange); font-weight:600;}
         .navicon{width:18px; text-align:center; opacity:.9;}
 
-        .main{flex:1; min-width:0; margin-left:236px; transition: margin 0.3s ease;}
+        /* PERBAIKAN RESPONSIVE: Margin-left hanya untuk Desktop */
+        .main{flex:1; min-width:0; transition: margin 0.3s ease;}
+        @media (min-width: 768px) {
+            .main{ margin-left: 236px; }
+        }
+
         .topbar{
             background:#fff; border-bottom:1px solid var(--border); padding:20px 32px;
             display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20;
@@ -180,9 +194,9 @@
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
                         <span>👤</span> Edit Profile
                     </a>
-
-                    <a href="{{ route('scoreboard') }}" target="_blank" class="navitem"><span class="navicon">🏆</span> Papan Skor Tim</a>
-
+                    <a href="{{ route('scoreboard') }}" target="_blank" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50">
+                        <span>🏆</span> Papan Skor Tim
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 text-red-600">
