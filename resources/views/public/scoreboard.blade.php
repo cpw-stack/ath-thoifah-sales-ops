@@ -139,6 +139,58 @@
   .dots{display:flex; gap:8px; justify-content:center; margin-top:14px;}
   .dot{width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); transition:background .3s;}
   .dot.on{background:var(--orange);}
+
+  /* === RESPONSIVE MOBILE === */
+  @media (max-width: 640px) {
+    .wrap{padding:20px 15px;}
+    .brand-title{font-size:20px;}
+    .clock{font-size:20px;}
+    .dateline{font-size:10px;}
+    .lb-title{font-size:12px;}
+    
+    .podium{gap:10px; margin:10px 0 20px;}
+    .pod{padding:10px 8px;}
+    .pod.first{height:180px;}
+    .pod.second{height:150px;}
+    .pod.third{height:130px;}
+    .pod .rank{font-size:24px;}
+    .pod .name{font-size:11px;}
+    .pod .score{font-size:10px;}
+    .avatar{width:40px; height:40px; font-size:16px; margin-bottom:5px;}
+    .pod.first .avatar{width:50px; height:50px;}
+    
+    .lb-row{gap:10px; padding:8px 5px;}
+    .lb-rank{font-size:12px; width:20px;}
+    .lb-avatar{width:24px; height:24px; font-size:10px;}
+    .lb-name{font-size:12px;}
+    .lb-bar-track{width:50px; height:6px;}
+    .lb-score{font-size:11px; width:60px;}
+    
+    .gauge-grid{flex-wrap:wrap; gap:20px;}
+    .gauge-item svg{width:100px; height:100px;}
+    .gauge-item svg text{font-size:20px;}
+    .gauge-title{font-size:11px; margin-top:5px;}
+    
+    .stamp-avatar{width:80px; height:80px; font-size:30px;}
+    .stamp-name{font-size:28px;}
+    .stamp-badge{font-size:14px; padding:5px 15px;}
+    .quote{font-size:13px; padding:0 10px;}
+    
+    .prod-row{padding:10px; gap:10px;}
+    .prod-rank{font-size:16px; width:20px;}
+    .prod-name{font-size:12px;}
+    .prod-qty{font-size:10px;}
+    .prod-bar-track{width:60px;}
+    .prod-total{font-size:11px; width:50px;}
+    
+    .metric-header{font-size:12px;}
+    .metric-value{font-size:10px;}
+    .metric-bar-bg{height:16px;}
+    .metric-pct{font-size:10px;}
+    
+    .ticker-label{font-size:10px; padding:4px 8px;}
+    .ticker-item{font-size:11px;}
+  }
 </style>
 </head>
 <body>
