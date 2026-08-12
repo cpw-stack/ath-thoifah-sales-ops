@@ -142,12 +142,14 @@
                 <div class="flex flex-col gap-1">
                     <span class="mono text-[11px]" style="color:var(--slate);">Deadline: {{ $t->due_date->format('d M') }}</span>
                     @if($t->attachment)
-                        <a href="{{ asset('storage/' . $t->attachment) }}" target="_blank" class="text-xs text-blue-600 font-semibold flex items-center gap-1">
-                            📎 Lihat Invoice
+                        <a href="{{ asset('storage/' . $t->attachment) }}" target="_blank" class="text-xs text-red-600 font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                            Lihat Invoice
                         </a>
                     @endif
                 </div>
-                <a href="{{ route('salesman.visits.index') }}" class="btn-outline-green text-[11px" style="padding:6px 12px;">Detail</a>
+                <!-- UBAH BAGIAN INI -->
+                <a href="{{ route('salesman.tasks.show', $t) }}" class="btn-outline-green text-[11px]" style="padding:6px 12px;">Detail</a>
             </div>
         </div>
         @endforeach

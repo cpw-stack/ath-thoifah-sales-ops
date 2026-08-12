@@ -86,6 +86,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/visits/{plan}/checkin', [VisitController::class, 'checkIn'])->name('visits.checkin');
             Route::post('/visits/{visit}/checkout', [VisitController::class, 'checkOut'])->name('visits.checkout');
         });
+        
+        // Tambahkan route detail task ini
+        Route::get('/tasks/{task}', [VisitController::class, 'showTask'])->name('tasks.show');
     });
 });
 

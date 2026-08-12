@@ -11,7 +11,7 @@ use App\Models\OrderItem;
 use App\Models\VisitProductCheck;
 use App\Models\Receivable;
 use App\Models\Collection;
-use App\Models\Task; // Tambahkan ini di bagian atas file
+use App\Models\Task; // Sudah ditambahkan di bagian atas file
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -70,7 +70,6 @@ class VisitController extends Controller
             ->whereDate('visit_date', today())
             ->get();
 
-        // Tambahkan ini di bagian atas file
         // Di dalam fungsi index(), sebelum return view salesman
         $tasks = Task::where('employee_id', $user->employee->id)
             ->where('status', 'pending')
@@ -95,6 +94,18 @@ class VisitController extends Controller
             ->get();
             
         return view('salesman.visits.show', compact('visit', 'products', 'receivables', 'tasks'));
+    }
+
+    public function showTask(Task $task)
+    {
+        // Pastikan salesman hanya bisa melihat tugasnya sendiri
+        if (auth()->user()->employee->id !== $task->employee_id) {
+            abort(403, 'Anda tidak memiliki akses ke tugas ini.');
+        }
+
+        $task->load('customer', 'employee');
+        
+        return view('salesman.tasks.show', compact('task'));
     }
 
     public function checkIn(Request $request, VisitPlan $plan)
