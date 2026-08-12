@@ -36,14 +36,15 @@ class ScoreboardController extends Controller
                 return $emp;
             })
             ->sortByDesc('total_sales')
-            ->take(6);
+            ->take(10)
+            ->values(); // Reset keys agar berurutan (0, 1, 2, 3, 4, 5)
 
         $salesmen->each(function($s) {
             $s->total_sales = $s->total_sales ?? 0;
         });
 
-        $top3 = $salesmen->take(3);
-        $rest = $salesmen->slice(3);
+        $top3 = $salesmen->take(3)->values(); // Reset keys (0, 1, 2)
+        $rest = $salesmen->slice(3)->values(); // Reset keys (0, 1, 2, dst)
         $maxSales = $salesmen->first() ? $salesmen->first()->total_sales : 1;
 
         // 2. Target Tim (Gauges)

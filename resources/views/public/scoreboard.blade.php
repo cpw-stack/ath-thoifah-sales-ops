@@ -161,46 +161,46 @@
     <div class="slide active" id="slide-0">
       <div class="lb-title">🏆 Ranking Penjualan Bulan Ini</div>
       <div class="podium">
-        @if($top3->get(1))
+        @if(isset($top3[1]))
         <div class="pod second">
           <div class="medal">🥈</div>
           <div class="avatar">
-            @if($top3->get(1)->user && $top3->get(1)->user->photo) <img src="{{ asset('storage/' . $top3->get(1)->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3->get(1)->full_name, 0, 1)) }} @endif
+            @if($top3[1]->user && $top3[1]->user->photo) <img src="{{ asset('storage/' . $top3[1]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[1]->full_name, 0, 1)) }} @endif
           </div>
           <div class="rank">2</div>
-          <div class="name">{{ $top3->get(1)->full_name }}</div>
-          <div class="score">Rp {{ number_format($top3->get(1)->total_sales, 0, ',', '.') }}</div>
+          <div class="name">{{ $top3[1]->full_name }}</div>
+          <div class="score">Rp {{ number_format($top3[1]->total_sales, 0, ',', '.') }}</div>
         </div>
         @endif
         
-        @if($top3->get(0))
+        @if(isset($top3[0]))
         <div class="pod first">
           <div class="medal">🥇</div>
           <div class="avatar">
-            @if($top3->get(0)->user && $top3->get(0)->user->photo) <img src="{{ asset('storage/' . $top3->get(0)->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3->get(0)->full_name, 0, 1)) }} @endif
+            @if($top3[0]->user && $top3[0]->user->photo) <img src="{{ asset('storage/' . $top3[0]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[0]->full_name, 0, 1)) }} @endif
           </div>
           <div class="rank">1</div>
-          <div class="name">{{ $top3->get(0)->full_name }}</div>
-          <div class="score">Rp {{ number_format($top3->get(0)->total_sales, 0, ',', '.') }}</div>
+          <div class="name">{{ $top3[0]->full_name }}</div>
+          <div class="score">Rp {{ number_format($top3[0]->total_sales, 0, ',', '.') }}</div>
         </div>
         @endif
 
-        @if($top3->get(2))
+        @if(isset($top3[2]))
         <div class="pod third">
           <div class="medal">🥉</div>
           <div class="avatar">
-            @if($top3->get(2)->user && $top3->get(2)->user->photo) <img src="{{ asset('storage/' . $top3->get(2)->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3->get(2)->full_name, 0, 1)) }} @endif
+            @if($top3[2]->user && $top3[2]->user->photo) <img src="{{ asset('storage/' . $top3[2]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[2]->full_name, 0, 1)) }} @endif
           </div>
           <div class="rank">3</div>
-          <div class="name">{{ $top3->get(2)->full_name }}</div>
-          <div class="score">Rp {{ number_format($top3->get(2)->total_sales, 0, ',', '.') }}</div>
+          <div class="name">{{ $top3[2]->full_name }}</div>
+          <div class="score">Rp {{ number_format($top3[2]->total_sales, 0, ',', '.') }}</div>
         </div>
         @endif
       </div>
       <div class="lb-list">
-        @foreach($rest as $i => $s)
+        @foreach($rest as $s)
         <div class="lb-row">
-            <span class="lb-rank">{{ str_pad($i + 4, 2, '0', STR_PAD_LEFT) }}</span>
+            <span class="lb-rank">{{ str_pad($loop->iteration + 3, 2, '0', STR_PAD_LEFT) }}</span>
             <div class="lb-avatar">
               @if($s->user && $s->user->photo) <img src="{{ asset('storage/' . $s->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($s->full_name, 0, 1)) }} @endif
             </div>
