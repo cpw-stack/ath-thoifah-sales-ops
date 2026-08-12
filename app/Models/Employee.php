@@ -26,7 +26,19 @@ class Employee extends Model
         return $this->belongsTo(SalesArea::class);
     }
 
-    public function tasks() { return $this->hasMany(Task::class); }
-    public function target() { return $this->hasOne(Target::class); }
+    public function tasks() 
+    { 
+        return $this->hasMany(Task::class); 
+    }
 
+    public function target() 
+    { 
+        return $this->hasOne(Target::class); 
+    }
+
+    // Relasi untuk Sales Order
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }
