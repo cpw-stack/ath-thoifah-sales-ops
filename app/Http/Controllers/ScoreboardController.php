@@ -19,22 +19,24 @@ class ScoreboardController extends Controller
         $endOfMonth = now()->endOfMonth();
         $period = now()->format('Y-m');
 
-        // 1. Ranking Salesmen (Bulan Ini) + Eager Load 'user' untuk Foto
-        $salesmen = Employee::select('employees.*')
-            ->selectRaw('SUM(orders.total_amount) as total_sales')
-            ->leftJoin('orders', function($join) use ($startOfMonth, $endOfMonth) {
-                $join->on('employees.id', '=', 'orders.employee_id')
-                     ->whereBetween('orders.created_at', [$startOfMonth, $endOfMonth])
-                     ->where('orders.status', '!=', 'cancelled');
-            })
-            ->whereHas('user', function($q) {
+        // 1. Ranking Salesmen (Bulan Ini) - Compatible dengan MySQL Strict Mode
+        $salesmen = Employee::whereHas('user', function($q) {
                 $q->role('salesman');
             })
-            ->groupBy('employees.id')
-            ->orderByDesc('total_sales')
-            ->with('target', 'user') // Load user untuk foto
-            ->take(6)
-            ->get();
+            ->with(['orders' => function($q) use ($startOfMonth, $endOfMonth) {
+                $q->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                  ->where('status', '!=', 'cancelled')
+                  ->selectRaw('employee_id, SUM(total_amount) as total_sales')
+                  ->groupBy('employee_id');
+            }])
+            ->with('target', 'user')
+            ->get()
+            ->map(function($emp) {
+                $emp->total_sales = $emp->orders->isNotEmpty() ? $emp->orders->first()->total_sales : 0;
+                return $emp;
+            })
+            ->sortByDesc('total_sales')
+            ->take(6);
 
         $salesmen->each(function($s) {
             $s->total_sales = $s->total_sales ?? 0;
