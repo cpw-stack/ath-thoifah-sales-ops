@@ -32,6 +32,7 @@ class SecurityHeaders
 
         return $response;
     }
+    
 
     private function cspPolicy(): string
     {
