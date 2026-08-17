@@ -37,9 +37,13 @@ class SecurityHeaders
     {
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-            "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
-            "font-src 'self' fonts.gstatic.com",
+            // cdn.tailwindcss.com -> Tailwind Play CDN yang dipakai di layout salesman/admin
+            // cdnjs.cloudflare.com -> Alpine.js
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.tailwindcss.com cdnjs.cloudflare.com",
+            // cdnjs.cloudflare.com juga ditambahkan di style-src karena Tailwind Play CDN
+            // menyuntikkan <style> lewat JS yang sebagian di-load dari domain itu
+            "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com",
+            "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com",
             "img-src 'self' data: https:",
             "connect-src 'self'",
             "frame-ancestors 'self'",
