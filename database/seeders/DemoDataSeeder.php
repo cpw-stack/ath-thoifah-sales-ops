@@ -58,9 +58,9 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        // 2. Generate Data Aktivitas dari 20 Agustus hingga 26 Agustus 2026
+        // 2. Generate Data Aktivitas (Visit, Order, Collection) dari 20 hingga 25 Agustus 2026
         $startDate = Carbon::create(2026, 8, 20);
-        $endDate = Carbon::create(2026, 8, 26);
+        $endDate = Carbon::create(2026, 8, 25);
 
         for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
             foreach ($salesmen as $emp) {
@@ -68,7 +68,7 @@ class DemoDataSeeder extends Seeder
                 if (rand(1, 10) > 2) {
                     $customer = $customers->random();
                     
-                    // Buat Visit Plan
+                    // Buat Visit Plan (Completed)
                     $plan = VisitPlan::firstOrCreate(
                         ['employee_id' => $emp->id, 'customer_id' => $customer->id, 'visit_date' => $date->format('Y-m-d')],
                         ['status' => 'completed', 'created_at' => $date, 'updated_at' => $date]
@@ -154,7 +154,41 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        // 3. Buat Tugas (Tasks) dengan deadline 26 - 31 Agustus 2026
+        // 3. Generate Visit Planning (Jadwal Kunjungan) untuk 26 - 31 Agustus 2026 (Status: Planned)
+        $planStartDate = Carbon::create(2026, 8, 26);
+        $planEndDate = Carbon::create(2026, 8, 31);
+
+        for ($date = $planStartDate; $date->lte($planEndDate); $date->addDay()) {
+            foreach ($salesmen as $emp) {
+                // Beri 2-3 jadwal visit per salesman per hari
+                $numPlans = rand(2, 3);
+                $visitedCustomers = [];
+                
+                for ($i = 0; $i < $numPlans; $i++) {
+                    $customer = $customers->random();
+                    
+                    // Pastikan tidak ada jadwal ganda untuk toko yang sama di tanggal yang sama
+                    if (!in_array($customer->id, $visitedCustomers)) {
+                        $visitedCustomers[] = $customer->id;
+                        
+                        VisitPlan::firstOrCreate(
+                            [
+                                'employee_id' => $emp->id, 
+                                'customer_id' => $customer->id, 
+                                'visit_date' => $date->format('Y-m-d')
+                            ],
+                            [
+                                'status' => 'planned',
+                                'created_at' => Carbon::now(),
+                                'updated_at' => Carbon::now()
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+
+        // 4. Buat Tugas (Tasks) dengan deadline 26 - 31 Agustus 2026
         $taskTitles = [
             'Tagih piutang jatuh tempo', 'Pasang banner promo bulanan', 'Cek stok produk madu',
             'Survey harga kompetitor', 'Ambil order Kurma Ajwa', 'Retur barang rusak',
@@ -183,6 +217,6 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        $this->command->info("Data demo transaksi (20-26 Agustus) & Tugas (deadline 26-31 Agustus) berhasil dibuat!");
+        $this->command->info("Data demo transaksi (20-25 Agustus), Visit Planning (26-31 Agustus), & Tugas berhasil dibuat!");
     }
 }
