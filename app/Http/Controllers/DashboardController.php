@@ -47,7 +47,9 @@ class DashboardController extends Controller
             $count = Visit::whereDate('check_in_at', $date)->count();
             $weekVisits[] = ['day' => $date->translatedFormat('D'), 'val' => $count];
         }
-        $maxVisit = max(array_column($weekVisits, 'val') ?: [1]);
+        
+        // PERBAIKAN: Gunakan max(1, ...) agar tidak terjadi Division by zero
+        $maxVisit = max(1, max(array_column($weekVisits, 'val')));
 
         // 3. Salesman Berisiko (Real Data: Cari yang targetnya di bawah 50%)
         $atRisk = [];
