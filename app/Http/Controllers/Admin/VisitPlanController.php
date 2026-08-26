@@ -27,7 +27,7 @@ class VisitPlanController extends Controller
                 $query->where('customer_id', $customerFilter);
             })
             ->orderByRaw("FIELD(status, 'planned', 'skipped', 'completed')")
-            ->orderBy('visit_date', 'asc')
+            ->orderBy('visit_date', 'desc') // Diubah ke DESC agar tanggal terbaru muncul di atas
             ->paginate(15);
 
         // Kirim data untuk dropdown filter
