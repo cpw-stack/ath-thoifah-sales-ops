@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\ReportController; 
 use App\Http\Controllers\Admin\TargetController; 
 use App\Http\Controllers\ScoreboardController; 
-use App\Http\Controllers\Admin\VisitPlanController; // Tambahkan ini
+use App\Http\Controllers\Admin\VisitPlanController;
 
 // Public Landing Page
 Route::get('/', function () {
@@ -42,6 +42,21 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         
         // 1. Custom Routes (WAJIB diletakkan di ATAS Route::resource)
+        
+        // --- ROUTE BARU: Stok & Diskon Mitra (Harus di atas resource customers) ---
+        Route::get('/customers/{customer}/stocks', [CustomerController::class, 'stockIndex'])->name('customers.stocks');
+        Route::post('/customers/{customer}/stocks', [CustomerController::class, 'stockStore'])->name('customers.stocks.store');
+        Route::get('/customers/{customer}/discounts', [CustomerController::class, 'discountIndex'])->name('customers.discounts');
+        Route::post('/customers/{customer}/discounts', [CustomerController::class, 'discountStore'])->name('customers.discounts.store');
+        
+        // --- ROUTE BARU: Detail & Manajemen Diskon Mitra ---
+        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+        Route::post('/customers/{customer}/discount', [CustomerController::class, 'storeDiscount'])->name('customers.discount.store');
+        Route::delete('/customers/{customer}/discount/{discount}', [CustomerController::class, 'destroyDiscount'])->name('customers.discount.destroy');
+        Route::post('/customers/{customer}/discount/{discount}/approve', [CustomerController::class, 'approveDiscount'])->name('customers.discount.approve');
+        Route::post('/customers/{customer}/discount/{discount}/reject', [CustomerController::class, 'rejectDiscount'])->name('customers.discount.reject');
+        // --------------------------------------------------------------------------------
+
         Route::get('/areas/template', [SalesAreaController::class, 'template'])->name('areas.template');
         Route::post('/areas/import', [SalesAreaController::class, 'import'])->name('areas.import');
 
@@ -60,13 +75,19 @@ Route::middleware(['auth'])->group(function () {
         
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
+        // --- ROUTE BARU: Approval Jadwal & Setting ---
+        Route::get('/schedule-approvals', [VisitPlanController::class, 'approvalIndex'])->name('schedule-approvals.index');
+        Route::post('/schedule-approvals/{request}/approve', [VisitPlanController::class, 'approveSchedule'])->name('schedule-approvals.approve');
+        Route::post('/schedule-approvals/{request}/reject', [VisitPlanController::class, 'rejectSchedule'])->name('schedule-approvals.reject');
+        // ---------------------------------------------
+
         // Tambahkan route resource untuk VisitPlan
         Route::resource('visit-plans', VisitPlanController::class); 
 
         // 2. Resource Routes (Diletakkan di BAWAH custom routes)
         Route::resource('areas', SalesAreaController::class);
         Route::resource('products', ProductController::class);
-        Route::resource('customers', CustomerController::class);
+        Route::resource('customers', CustomerController::class)->except(['show']); // Kecualikan show karena sudah didefinisikan di atas
         Route::resource('employees', EmployeeController::class);
         Route::resource('tasks', TaskController::class);
         Route::resource('targets', TargetController::class);
@@ -89,6 +110,14 @@ Route::middleware(['auth'])->group(function () {
         
         // Tambahkan route detail task ini
         Route::get('/tasks/{task}', [VisitController::class, 'showTask'])->name('tasks.show');
+
+        Route::post('/visits/{visit}/propose-discount', [VisitController::class, 'proposeDiscount'])->name('visits.propose_discount');
+
+        // --- ROUTE BARU: Usulkan Jadwal & Lihat Stok Toko ---
+        Route::get('/schedule/create', [VisitController::class, 'createSchedule'])->name('schedule.create');
+        Route::post('/schedule', [VisitController::class, 'storeSchedule'])->name('schedule.store');
+        Route::get('/customers/{customer}/stocks', [VisitController::class, 'customerStocks'])->name('customers.stocks');
+        // ----------------------------------------------------
     });
 });
 

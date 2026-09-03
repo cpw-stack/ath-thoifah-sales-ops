@@ -8,7 +8,6 @@
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1B2A41">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -19,19 +18,16 @@
   }
   *{box-sizing:border-box;}
 
-  /* PENTING: kunci scroll di html DAN body, bukan cuma body.
-     Kalau cuma body yang overflow:hidden, sebagian browser mobile
-     tetap membiarkan <html> yang scroll dan menu ikut terbawa. */
   html{
     height:100%;
-    height:100dvh; /* dynamic viewport height: mengikuti tinggi layar terlihat, bukan tinggi penuh termasuk area address bar */
+    height:100dvh; 
     overflow:hidden;
   }
   body{
     margin:0; padding:0;
     height:100%;
     height:100dvh;
-    overflow:hidden; /* Mencegah double scroll di level body */
+    overflow:hidden; 
     background:#DCD3BE;
     font-family:'Inter',sans-serif;
     color:var(--ink);
@@ -50,10 +46,9 @@
       box-shadow:none;
       width:100%;
       max-width:100%;
-      height:100vh;   /* fallback untuk browser lama yang belum kenal dvh */
+      height:100vh;   
       height:100dvh;
       max-height:none;
-      /* viewport-fit=cover + safe-area supaya nav tidak ketutup notch/gesture bar iPhone */
       padding-bottom:env(safe-area-inset-bottom, 0px);
     }
     .notch{display:none;}
@@ -72,14 +67,9 @@
     height:100dvh;
     max-height:860px;
     display:flex;
-    flex-direction:column; /* Layout vertikal: topbar - screen(scroll) - nav */
+    flex-direction:column; 
   }
   .notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:150px; height:22px; background:#14202f; border-radius:0 0 16px 16px; z-index:50;}
-
-  .perf{position:relative; height:0; border-top:2px dashed #C9BC9C; margin:0 -1px;}
-  .perf::before,.perf::after{content:''; position:absolute; top:-9px; width:18px; height:18px; border-radius:50%; background:#DCD3BE;}
-  .perf::before{left:-21px;} .perf::after{right:-21px;}
-  @media (max-width: 640px){ .perf::before, .perf::after{display:none;} }
 
   .topbar{background:var(--ink); color:var(--paper); padding:34px 20px 16px; position:relative; flex-shrink:0; z-index:10;}
   .topbar .stub{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#9DAEC7;}
@@ -96,21 +86,18 @@
   .progress-track{background:#EAE2CB; border-radius:8px; height:10px; overflow:hidden;}
   .progress-fill{height:100%; border-radius:8px; background:var(--green);}
 
-  .navbtn{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10.5px; font-weight:600; color:#9DAEC7; background:none; border:none; cursor:pointer;}
+  /* Bottom Nav Styling */
+  .navbtn{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10.5px; font-weight:600; color:#9DAEC7; background:none; border:none; cursor:pointer; text-decoration:none;}
   .navbtn.active{color:var(--paper);}
   .navbtn.active .navicon{background:var(--orange);}
   .navicon{width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.08);}
 
-  /* INI BAGIAN PENTING UNTUK SCROLL INTERNAL — hanya .screen yang boleh scroll,
-     device dan bottom nav TIDAK BOLEH ikut bergerak. */
   .screen{
     flex:1 1 auto;
-    min-height:0;      /* wajib di Flexbox: tanpa ini, flex child dengan overflow-y bisa gagal
-                           membatasi tinggi dan malah mendorong .device jadi lebih tinggi dari layar,
-                           yang ujungnya bikin seluruh body ikut scroll. */
+    min-height:0;      
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    overscroll-behavior:contain; /* mencegah "scroll chaining" ke body saat sudah mentok atas/bawah */
+    overscroll-behavior:contain; 
     padding-bottom:8px;
   }
   .screen::-webkit-scrollbar{width:0;}
@@ -120,10 +107,10 @@
 </head>
 <body>
 
-<div x-data="salesApp()" class="device">
+<div class="device">
   <div class="notch"></div>
 
-  <!-- TOP BAR (flex-shrink:0 -> tidak menyusut, selalu di atas) -->
+  <!-- TOP BAR -->
   <div class="topbar">
     <div class="flex items-center justify-between">
       <div>
@@ -131,49 +118,44 @@
         <div class="display text-lg mt-1" style="font-size:19px;">Halo, {{ auth()->user()->name }} 👋</div>
       </div>
       <div class="text-right">
-        <div class="mono text-xs" x-text="clock" style="color:#C7D2E3;"></div>
+        <div class="mono text-xs" id="clockEl" style="color:#C7D2E3;">--:--</div>
         <div class="chip chip-dark mt-2">Area: {{ auth()->user()->employee->salesArea->name ?? 'N/A' }}</div>
       </div>
     </div>
   </div>
 
-  <!-- SCREEN (flex:1, min-height:0 -> satu-satunya bagian yang scroll) -->
+  <!-- SCREEN DYNAMIC CONTENT -->
   <div class="screen" style="background:var(--paper);">
     @yield('content')
   </div>
 
-  <!-- BOTTOM NAV (flex-shrink:0 -> selalu menempel di bawah, tidak ikut scroll) -->
+  <!-- BOTTOM NAV (Pure Link, No Alpine) -->
   <div class="flex items-center justify-around py-2.5" style="background:var(--ink); padding-bottom:18px; flex-shrink:0; z-index:10;">
-    <button class="navbtn" :class="tab==='home' && 'active'" @click="tab='home'">
+    <a href="{{ route('salesman.home') }}" class="navbtn {{ request()->routeIs('salesman.home') ? 'active' : '' }}">
       <span class="navicon">🏠</span> Beranda
-    </button>
-    <button class="navbtn" :class="(tab==='visits'||tab==='detail') && 'active'" @click="tab='visits'">
+    </a>
+    <a href="{{ route('salesman.schedule.create') }}" class="navbtn {{ request()->routeIs('salesman.schedule.*') ? 'active' : '' }}">
+      <span class="navicon">📅</span> Jadwal
+    </a>
+    <a href="{{ route('salesman.visits.index') }}" class="navbtn {{ request()->routeIs('salesman.visits.*') ? 'active' : '' }}">
       <span class="navicon">📍</span> Kunjungan
-    </button>
-    <button class="navbtn" :class="tab==='tasks' && 'active'" @click="tab='tasks'">
-      <span class="navicon">✅</span> Tugas
-    </button>
-    <a href="{{ route('profile.edit') }}" class="navbtn">
+    </a>
+    <a href="{{ route('profile.edit') }}" class="navbtn {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
       <span class="navicon">👤</span> Akun
     </a>
   </div>
 </div>
 
+<!-- Simple Script for Clock (No Alpine needed) -->
 <script>
-function salesApp(){
-  return {
-    tab: window.location.hash ? window.location.hash.substring(1) : 'home',
-    clock: '',
-    init(){
-      this.updateClock();
-      setInterval(()=>this.updateClock(), 30000);
-    },
-    updateClock(){
-      const d = new Date();
-      this.clock = d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) + ' · ' + d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
-    }
+  function updateClock(){
+    const d = new Date();
+    const time = d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const date = d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
+    document.getElementById('clockEl').textContent = time + ' · ' + date;
   }
-}
+  updateClock();
+  setInterval(updateClock, 30000);
 </script>
 </body>
 </html>

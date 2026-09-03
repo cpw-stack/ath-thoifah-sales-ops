@@ -12,7 +12,7 @@
         <a href="{{ route('admin.orders.index') }}" class="btn-outline">← Kembali</a>
     </div>
 
-    <div class="card mb-6 p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card mb-6 p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Toko Mitra</div>
             <div class="font-semibold mt-1">{{ $order->customer->name }}</div>
@@ -20,6 +20,14 @@
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Salesman</div>
             <div class="font-semibold mt-1">{{ $order->employee->full_name }}</div>
+        </div>
+        <div>
+            <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Tipe Pembayaran</div>
+            <div class="mt-1">
+                <span class="badge {{ $order->payment_type == 'cash' ? 'badge-green' : ($order->payment_type == 'konsinyasi' ? 'badge-amber' : 'badge-red') }}">
+                    {{ ucfirst($order->payment_type) }}
+                </span>
+            </div>
         </div>
         <div>
             <div class="text-xs uppercase tracking-wider mb-1" style="color:var(--slate);">Status Order</div>

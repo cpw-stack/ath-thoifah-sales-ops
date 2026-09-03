@@ -39,13 +39,14 @@
 <!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
 <div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+        <table class="w-full text-left border-collapse min-w-[900px]">
             <thead>
                 <tr class="bg-gray-50 border-b" style="border-color:var(--border);">
                     <th class="p-4">Kode Order</th>
                     <th class="p-4">Toko</th>
                     <th class="p-4">Salesman</th>
                     <th class="p-4">Total</th>
+                    <th class="p-4 text-center">Tipe Bayar</th>
                     <th class="p-4 text-center">Status</th>
                     <th class="p-4 text-right">Aksi</th>
                 </tr>
@@ -57,6 +58,11 @@
                     <td class="p-4 text-sm font-semibold">{{ $o->customer->name }}</td>
                     <td class="p-4 text-sm">{{ $o->employee->full_name }}</td>
                     <td class="p-4 mono text-sm">Rp {{ number_format($o->total_amount, 0, ',', '.') }}</td>
+                    <td class="p-4 text-center">
+                        <span class="badge {{ $o->payment_type == 'cash' ? 'badge-green' : ($o->payment_type == 'konsinyasi' ? 'badge-amber' : 'badge-red') }}">
+                            {{ ucfirst($o->payment_type) }}
+                        </span>
+                    </td>
                     <td class="p-4 text-center">
                         <span class="badge {{ $o->status == 'delivered' ? 'badge-green' : ($o->status == 'processed' ? 'badge-amber' : ($o->status == 'cancelled' ? 'badge-red' : 'badge-slate')) }}">{{ $o->status }}</span>
                     </td>
@@ -74,7 +80,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="p-8 text-center" style="color:var(--slate);">Belum ada order sesuai filter.</td></tr>
+                <tr><td colspan="7" class="p-8 text-center" style="color:var(--slate);">Belum ada order sesuai filter.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -104,6 +110,12 @@
             <div class="flex justify-between">
                 <span style="color:var(--slate);">Total:</span>
                 <span class="font-semibold text-right mono">Rp {{ number_format($o->total_amount, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span style="color:var(--slate);">Tipe Bayar:</span>
+                <span class="badge {{ $o->payment_type == 'cash' ? 'badge-green' : ($o->payment_type == 'konsinyasi' ? 'badge-amber' : 'badge-red') }}">
+                    {{ ucfirst($o->payment_type) }}
+                </span>
             </div>
         </div>
 

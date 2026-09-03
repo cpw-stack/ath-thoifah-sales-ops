@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\VisitPlan;
 use App\Models\Employee;
 use App\Models\Customer;
+use App\Models\VisitScheduleRequest;
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class VisitPlanController extends Controller
 {
@@ -99,5 +102,54 @@ class VisitPlanController extends Controller
         
         $visitPlan->delete();
         return redirect()->route('admin.visit-plans.index')->with('success', 'Jadwal kunjungan dibatalkan.');
+    }
+
+    // =========================================================
+    // FITUR BARU: Approval Jadwal Kunjungan
+    // =========================================================
+
+    public function approvalIndex()
+    {
+        $pendingRequests = VisitScheduleRequest::with('employee', 'customer')
+            ->where('status', 'pending')
+            ->whereDate('visit_date', '>=', today())
+            ->orderBy('visit_date', 'asc')
+            ->get();
+
+        $deadlineTime = AppSetting::get('approval_deadline_time', '10:00');
+
+        return view('admin.visit-plans.approval', compact('pendingRequests', 'deadlineTime'));
+    }
+
+    public function approveSchedule(VisitScheduleRequest $request)
+    {
+        $request->update([
+            'status' => 'approved',
+            'approved_by' => auth()->user()->employee->id ?? null,
+            'approved_at' => now(),
+        ]);
+
+        // Buat Visit Plan otomatis berdasarkan request yang disetujui
+        VisitPlan::firstOrCreate([
+            'employee_id' => $request->employee_id,
+            'customer_id' => $request->customer_id,
+            'visit_date' => $request->visit_date,
+        ], ['status' => 'planned']);
+
+        return back()->with('success', 'Jadwal kunjungan berhasil disetujui.');
+    }
+
+    public function rejectSchedule(Request $req, VisitScheduleRequest $request)
+    {
+        $req->validate(['reject_reason' => 'required|string']);
+        
+        $request->update([
+            'status' => 'rejected',
+            'reject_reason' => $req->reject_reason,
+            'approved_by' => auth()->user()->employee->id ?? null,
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'Jadwal kunjungan telah ditolak.');
     }
 }

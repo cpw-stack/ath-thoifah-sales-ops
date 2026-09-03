@@ -28,4 +28,14 @@ class Customer extends Model
     {
         return $this->hasMany(Receivable::class);
     }
+
+    public function discounts()
+    {
+        return $this->hasMany(CustomerStockDiscount::class);
+    }
+
+    public function stocks()
+    {
+        return $this->hasMany(MitraStock::class);
+    }
 }

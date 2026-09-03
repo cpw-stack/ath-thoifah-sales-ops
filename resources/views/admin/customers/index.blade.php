@@ -62,6 +62,7 @@
                         @endif
                     </td>
                     <td class="p-4 text-right">
+                        <a href="{{ route('admin.customers.show', $customer) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail</a>
                         <a href="{{ route('admin.customers.edit', $customer) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
                         <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
                             @csrf @method('DELETE')
@@ -112,6 +113,7 @@
         </div>
 
         <div class="flex gap-2 border-t pt-3" style="border-color:var(--border);">
+            <a href="{{ route('admin.customers.show', $customer) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Detail</a>
             <a href="{{ route('admin.customers.edit', $customer) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Edit</a>
             <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
                 @csrf @method('DELETE')

@@ -11,7 +11,10 @@ use App\Models\OrderItem;
 use App\Models\VisitProductCheck;
 use App\Models\Receivable;
 use App\Models\Collection;
-use App\Models\Task; // Sudah ditambahkan di bagian atas file
+use App\Models\Task;
+use App\Models\Customer;
+use App\Models\VisitScheduleRequest;
+use App\Models\CustomerStockDiscount; // Ditambahkan untuk logika diskon
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -70,13 +73,20 @@ class VisitController extends Controller
             ->whereDate('visit_date', today())
             ->get();
 
-        // Di dalam fungsi index(), sebelum return view salesman
+        // AMBIL DATA USULAN JADWAL (Hari ini & Besok)
+        $scheduleRequests = VisitScheduleRequest::with('customer')
+            ->where('employee_id', $user->employee->id)
+            ->whereDate('visit_date', '>=', today())
+            ->orderBy('visit_date', 'asc')
+            ->get();
+
+        // Ambil tugas pending hari ini (dipertahankan agar tidak merusak view)
         $tasks = Task::where('employee_id', $user->employee->id)
             ->where('status', 'pending')
             ->whereDate('due_date', today())
             ->get();
 
-        return view('salesman.visits.index', compact('plans', 'tasks')); // Sertakan tasks dalam compact
+        return view('salesman.visits.index', compact('plans', 'scheduleRequests', 'tasks'));
     }
 
     public function show(Visit $visit)
@@ -84,16 +94,26 @@ class VisitController extends Controller
         $visit->load('customer', 'productChecks.product', 'order.items.product');
         $products = Product::where('status', 'active')->get();
         
+        // Ambil piutang toko
         $receivables = Receivable::where('customer_id', $visit->customer_id)
             ->where('status', '!=', 'paid')
             ->get();
             
-        // TAMBAHKAN INI: Ambil tugas yang memiliki lampiran untuk toko ini
+        // Ambil tugas yang ada lampirannya (untuk invoice penagihan)
         $tasks = \App\Models\Task::where('customer_id', $visit->customer_id)
             ->whereNotNull('attachment')
             ->get();
-            
-        return view('salesman.visits.show', compact('visit', 'products', 'receivables', 'tasks'));
+
+        // AMBIL DATA DISKON MITRA
+        $discount = CustomerStockDiscount::where('customer_id', $visit->customer_id)
+            ->where('is_active', true)
+            ->latest()
+            ->first();
+
+        // Cek tipe salesman (online/offline)
+        $isOnlineSalesman = $visit->employee->type === 'online';
+
+        return view('salesman.visits.show', compact('visit', 'products', 'receivables', 'tasks', 'discount', 'isOnlineSalesman'));
     }
 
     public function showTask(Task $task)
@@ -179,7 +199,7 @@ class VisitController extends Controller
             );
         }
 
-        return back()->with('success', 'Cek produk berhasil disimpan.');
+        return redirect()->route('salesman.visits.show', $visit)->with('success', 'Cek produk berhasil disimpan.');
     }
 
     public function storeOrder(Request $request, Visit $visit)
@@ -188,6 +208,7 @@ class VisitController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
+            'payment_type' => 'required|in:cash,konsinyasi,piutang',
         ]);
 
         $totalAmount = 0;
@@ -206,18 +227,31 @@ class VisitController extends Controller
             ]);
         }
 
+        // Hitung diskon jika ada yang approved
+        $discount = CustomerStockDiscount::where('customer_id', $visit->customer_id)
+            ->where('is_active', true)
+            ->where('is_approved', true)
+            ->latest()->first();
+
+        $discountAmount = 0;
+        if ($discount && $discount->discount_value > 0) {
+            $discountAmount = ($totalAmount * $discount->discount_value) / 100;
+        }
+        $finalAmount = $totalAmount - $discountAmount;
+
         $order = Order::create([
             'order_code' => 'ORD-' . date('ymd') . '-' . Str::random(4),
             'visit_id' => $visit->id,
             'customer_id' => $visit->customer_id,
             'employee_id' => $visit->employee_id,
-            'total_amount' => $totalAmount,
+            'total_amount' => $finalAmount,
+            'payment_type' => $request->payment_type,
             'status' => 'pending'
         ]);
 
         $order->items()->saveMany($orderItems);
 
-        return back()->with('success', "Order berhasil dibuat! Total: Rp " . number_format($totalAmount, 0, ',', '.'));
+        return back()->with('success', "Order berhasil! Total: Rp " . number_format($finalAmount, 0, ',', '.') . " (" . $request->payment_type . ")");
     }
 
     public function storeCollection(Request $request, Visit $visit)
@@ -266,6 +300,64 @@ class VisitController extends Controller
 
         return back()->with('success', "Penagihan berhasil! Diterima Rp " . number_format($request->amount, 0, ',', '.'));
     }
+
+    // =========================================================
+    // FITUR BARU: Usulan Jadwal Kunjungan oleh Salesman
+    // =========================================================
+
+    public function createSchedule()
+    {
+        $employee = auth()->user()->employee;
+        // Ambil toko yang aktif
+        $customers = Customer::where('status', 'active')->get();
+        return view('salesman.schedule.create', compact('customers'));
+    }
+
+    public function storeSchedule(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'visit_date' => 'required|date|in:' . today()->format('Y-m-d') . ',' . today()->copy()->addDay()->format('Y-m-d'),
+        ]);
+
+        VisitScheduleRequest::firstOrCreate(
+            [
+                'employee_id' => auth()->user()->employee->id,
+                'customer_id' => $validated['customer_id'],
+                'visit_date' => $validated['visit_date'],
+            ],
+            ['status' => 'pending']
+        );
+
+        return redirect()->route('salesman.home')->with('success', 'Usulan jadwal berhasil dikirim, menunggu approval Admin.');
+    }
+
+    // =========================================================
+    // FITUR BARU: Pengajuan Diskon oleh Salesman
+    // =========================================================
+
+    public function proposeDiscount(Request $request, Visit $visit)
+    {
+        $request->validate([
+            'discount_value' => 'required|numeric|min:0|max:100',
+        ]);
+
+        // Gunakan updateOrCreate agar data diskon lama ditimpa, tidak menumpuk data baru
+        CustomerStockDiscount::updateOrCreate(
+            ['customer_id' => $visit->customer_id],
+            [
+                'type' => 'percentage',
+                'value' => $request->discount_value,
+                'discount_value' => $request->discount_value,
+                'is_active' => true,
+                'is_approved' => false, // Set kembali ke menunggu approval
+            ]
+        );
+
+        return back()->with('success', 'Pengajuan diskon ' . $request->discount_value . '% terkirim ke Admin.');
+    }
+
+    // =========================================================
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {

@@ -13,7 +13,7 @@ class Employee extends Model
 
     protected $fillable = [
         'user_id', 'employee_code', 'full_name', 'phone_number', 'sales_area_id', 
-        'supervisor_id', 'status', 'birth_date', 'gender', 'id_card_number'
+        'supervisor_id', 'status', 'birth_date', 'gender', 'id_card_number', 'type'
     ];
 
     public function user()
