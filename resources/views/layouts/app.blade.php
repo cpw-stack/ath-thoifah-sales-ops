@@ -53,6 +53,18 @@
         .navitem.active{background:rgba(232,98,44,.12); color:#fff; border-left-color:var(--orange); font-weight:600;}
         .navicon{width:18px; text-align:center; opacity:.9;}
 
+        /* CSS untuk Badge Notifikasi di Sidebar */
+        .notif-badge {
+            margin-left: auto;
+            background: #dc2626; /* Warna merah cerah agar terlihat di sidebar gelap */
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            line-height: 1.2;
+        }
+
         /* PERBAIKAN RESPONSIVE: Margin-left hanya untuk Desktop */
         .main{flex:1; min-width:0; transition: margin 0.3s ease;}
         @media (min-width: 768px) {
@@ -147,17 +159,42 @@
 
         <div class="navsec">Master Data</div>
         <a href="{{ route('admin.employees.index') }}" class="navitem {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}"><span class="navicon">🧑</span> Salesman</a>
-        <a href="{{ route('admin.customers.index') }}" class="navitem {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}"><span class="navicon">🏪</span> Mitra / Outlet</a>
+        <a href="{{ route('admin.customers.index') }}" class="navitem {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
+            <span class="navicon">🏪</span> Mitra / Outlet
+            @if(isset($pendingDiscounts) && $pendingDiscounts > 0)
+                <span class="notif-badge">{{ $pendingDiscounts }}</span>
+            @endif
+        </a>
         <a href="{{ route('admin.products.index') }}" class="navitem {{ request()->routeIs('admin.products.*') ? 'active' : '' }}"><span class="navicon">📦</span> Produk</a>
         <a href="{{ route('admin.areas.index') }}" class="navitem {{ request()->routeIs('admin.areas.*') ? 'active' : '' }}"><span class="navicon">🗺️</span> Area</a>
 
         <div class="navsec">Aktivitas Lapangan</div>
-        <a href="{{ route('admin.schedule-approvals.index') }}" class="navitem {{ request()->routeIs('admin.schedule-approvals.*') ? 'active' : '' }}"><span class="navicon">🕒</span> Approval Jadwal</a>
+        <a href="{{ route('admin.schedule-approvals.index') }}" class="navitem {{ request()->routeIs('admin.schedule-approvals.*') ? 'active' : '' }}">
+            <span class="navicon">🕒</span> Approval Jadwal
+            @if(isset($pendingSchedules) && $pendingSchedules > 0)
+                <span class="notif-badge">{{ $pendingSchedules }}</span>
+            @endif
+        </a>
         <a href="{{ route('admin.visit-plans.index') }}" class="navitem {{ request()->routeIs('admin.visit-plans.*') ? 'active' : '' }}"><span class="navicon">🗺️</span> Visit Planning</a>
         <a href="{{ route('salesman.visits.index') }}" class="navitem {{ request()->routeIs('salesman.visits.*') ? 'active' : '' }}"><span class="navicon">📍</span> Monitoring Kunjungan</a>
-        <a href="{{ route('admin.orders.index') }}" class="navitem {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}"><span class="navicon">🧾</span> Order</a>
-        <a href="{{ route('admin.collections.index') }}" class="navitem {{ request()->routeIs('admin.collections.*') ? 'active' : '' }}"><span class="navicon">💵</span> Collection</a>
-        <a href="{{ route('admin.tasks.index') }}" class="navitem {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}"><span class="navicon">✅</span> Task</a>
+        <a href="{{ route('admin.orders.index') }}" class="navitem {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
+            <span class="navicon">🧾</span> Order
+            @if(isset($pendingOrders) && $pendingOrders > 0)
+                <span class="notif-badge">{{ $pendingOrders }}</span>
+            @endif
+        </a>
+        <a href="{{ route('admin.collections.index') }}" class="navitem {{ request()->routeIs('admin.collections.*') ? 'active' : '' }}">
+            <span class="navicon">💵</span> Collection
+            @if(isset($pendingCollections) && $pendingCollections > 0)
+                <span class="notif-badge">{{ $pendingCollections }}</span>
+            @endif
+        </a>
+        <a href="{{ route('admin.tasks.index') }}" class="navitem {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
+            <span class="navicon">✅</span> Task
+            @if(isset($pendingTasks) && $pendingTasks > 0)
+                <span class="notif-badge">{{ $pendingTasks }}</span>
+            @endif
+        </a>
 
         <div class="navsec">Kinerja</div>
         <a href="{{ route('admin.targets.index') }}" class="navitem {{ request()->routeIs('admin.targets.*') ? 'active' : '' }}"><span class="navicon">🎯</span> Target</a>
