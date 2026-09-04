@@ -213,9 +213,28 @@ class VisitController extends Controller
 
         $totalAmount = 0;
         $orderItems = [];
+        $insufficientStock = [];
 
+        // 1. Cek ketersediaan stok gudang pusat terlebih dahulu
         foreach ($request->items as $item) {
             $product = Product::find($item['id']);
+            if ($product->stock < $item['qty']) {
+                $insufficientStock[] = $product->name . " (Sisa stok: {$product->stock} {$product->unit})";
+            }
+        }
+
+        // Jika ada stok yang kurang, batalkan transaksi dan kasih tau salesman
+        if (count($insufficientStock) > 0) {
+            return back()->with('error', 'Gagal membuat order. Stok gudang pusat tidak mencukupi untuk: ' . implode(', ', $insufficientStock))->withInput();
+        }
+
+        // 2. Jika stok cukup, kurangi stok gudang pusat dan hitung total
+        foreach ($request->items as $item) {
+            $product = Product::find($item['id']);
+            
+            // Kurangi stok gudang pusat
+            $product->decrement('stock', $item['qty']);
+            
             $subtotal = $product->price * $item['qty'];
             $totalAmount += $subtotal;
             
@@ -227,7 +246,7 @@ class VisitController extends Controller
             ]);
         }
 
-        // Hitung diskon jika ada yang approved
+        // 3. Hitung diskon jika ada yang approved
         $discount = CustomerStockDiscount::where('customer_id', $visit->customer_id)
             ->where('is_active', true)
             ->where('is_approved', true)
@@ -239,6 +258,7 @@ class VisitController extends Controller
         }
         $finalAmount = $totalAmount - $discountAmount;
 
+        // 4. Simpan Order
         $order = Order::create([
             'order_code' => 'ORD-' . date('ymd') . '-' . Str::random(4),
             'visit_id' => $visit->id,
@@ -251,7 +271,7 @@ class VisitController extends Controller
 
         $order->items()->saveMany($orderItems);
 
-        return back()->with('success', "Order berhasil! Total: Rp " . number_format($finalAmount, 0, ',', '.') . " (" . $request->payment_type . ")");
+        return back()->with('success', "Order berhasil! Total: Rp " . number_format($finalAmount, 0, ',', '.') . " (" . $request->payment_type . "). Stok gudang telah diperbarui.");
     }
 
     public function storeCollection(Request $request, Visit $visit)

@@ -9,6 +9,9 @@ use App\Models\Collection;
 use App\Models\Task;
 use App\Models\Target;
 use App\Models\Employee;
+use App\Models\Receivable;
+use App\Models\Product;
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -48,22 +51,16 @@ class DashboardController extends Controller
             $weekVisits[] = ['day' => $date->translatedFormat('D'), 'val' => $count];
         }
         
-        // PERBAIKAN: Gunakan max(1, ...) agar tidak terjadi Division by zero
         $maxVisit = max(1, max(array_column($weekVisits, 'val')));
 
-        // 3. Salesman Berisiko (Real Data: Cari yang targetnya di bawah 50%)
-        $atRisk = [];
-        $employees = Employee::where('status', 'active')->has('target')->get();
-        foreach ($employees as $emp) {
-            $target = $emp->target()->where('period_month', $period)->first();
-            if ($target) {
-                $actualVisits = Visit::where('employee_id', $emp->id)->whereMonth('check_in_at', $today->month)->count();
-                $pct = $target->visit_target > 0 ? round(($actualVisits / $target->visit_target) * 100) : 0;
-                if ($pct < 50) {
-                    $atRisk[] = ['inisial' => strtoupper(substr($emp->full_name, 0, 2)), 'nama' => $emp->full_name, 'alasan' => 'Target kunjungan tertinggal', 'pct' => $pct];
-                }
-            }
-        }
+        // 3. Top Performers (Real Data)
+        $topPerformers = Employee::whereHas('user', fn($q) => $q->role('salesman'))
+            ->withSum(['orders' => function($q) use ($today) {
+                $q->whereMonth('created_at', $today->month)->where('status', '!=', 'cancelled');
+            }], 'total_amount')
+            ->orderByDesc('orders_sum_total_amount')
+            ->take(5)
+            ->get();
 
         // 4. Target Achievement (Real Data Agregate)
         $totalTarget = Target::where('period_month', $period)->get();
@@ -85,7 +82,33 @@ class DashboardController extends Controller
             $recentActivities[] = ['time' => $o->created_at->format('H:i'), 'who' => 'System', 'what' => 'mencatat order Rp ' . number_format($o->total_amount, 0, ',', '.') . ' — ' . $o->customer->name];
         }
 
-        return view('dashboard', compact('stats', 'weekVisits', 'maxVisit', 'atRisk', 'orgMetrics', 'recentActivities'));
+        // 6. DATA BARU UNTUK WIDGET PERINGATAN
+        $lowStockThreshold = AppSetting::get('low_stock_threshold', 100);
+        
+        $dueReceivables = Receivable::where('status', '!=', 'paid')
+            ->whereDate('due_date', '<=', $today->copy()->addDays(7))
+            ->with('customer')
+            ->orderBy('due_date', 'asc')
+            ->take(5)
+            ->get();
+
+        $lowStockProducts = Product::where('stock', '<', $lowStockThreshold)
+            ->where('status', 'active')
+            ->orderBy('stock', 'asc')
+            ->take(5)
+            ->get();
+
+        $pendingOrders = Order::where('status', 'pending')
+            ->with('customer')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // PERBAIKAN: Ganti 'atRisk' menjadi 'topPerformers'
+        return view('dashboard', compact(
+            'stats', 'weekVisits', 'maxVisit', 'topPerformers', 'orgMetrics', 'recentActivities', 
+            'dueReceivables', 'lowStockProducts', 'pendingOrders', 'lowStockThreshold'
+        ));
     }
 
     private function calcPct($actual, $target) {

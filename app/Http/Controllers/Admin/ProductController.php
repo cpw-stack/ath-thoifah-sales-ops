@@ -32,11 +32,13 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sku' => 'required|unique:products,sku',
+            'sku' => 'required|unique:products,sku,'. ($request->route('product')->id ?? '') .',id',
             'name' => 'required|string|max:255',
             'product_category_id' => 'nullable|exists:product_categories,id',
             'unit' => 'required|string|max:20',
+            'hpp' => 'required|numeric|min:0',
             'price' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:0', // Tambahan
             'status' => 'required|in:active,inactive',
         ]);
 
@@ -54,11 +56,13 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'sku' => 'required|unique:products,sku,' . $product->id,
+            'sku' => 'required|unique:products,sku,'. ($request->route('product')->id ?? '') .',id',
             'name' => 'required|string|max:255',
             'product_category_id' => 'nullable|exists:product_categories,id',
             'unit' => 'required|string|max:20',
+            'hpp' => 'required|numeric|min:0',
             'price' => 'required|integer|min:0',
+            'stock' => 'required|integer|min:0', // Tambahan
             'status' => 'required|in:active,inactive',
         ]);
 

@@ -13,7 +13,7 @@
             <div class="p-5 space-y-4">
                 <div>
                     <label class="block text-xs mb-1" style="color:var(--slate);">Judul Tugas</label>
-                    <input type="text" name="title" value="{{ old('title') }}" class="w-full" required>
+                    <input type="text" name="title" value="{{ old('title', request('customer_id') ? 'Tagih piutang jatuh tempo' : '') }}" class="w-full" required>
                     @error('title') <div class="text-xs mt-1" style="color:var(--red);">{{ $message }}</div> @enderror
                 </div>
                 
@@ -31,7 +31,8 @@
                         <select name="customer_id" class="w-full">
                             <option value="">Tidak ada toko spesifik</option>
                             @foreach($customers as $cust)
-                                <option value="{{ $cust->id }}" {{ old('customer_id') == $cust->id ? 'selected' : '' }}>{{ $cust->name }}</option>
+                                <!-- Tambahan: Cek request('customer_id') agar otomatis terpilih -->
+                                <option value="{{ $cust->id }}" {{ old('customer_id', request('customer_id')) == $cust->id ? 'selected' : '' }}>{{ $cust->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -39,7 +40,7 @@
 
                 <div>
                     <label class="block text-xs mb-1" style="color:var(--slate);">Deskripsi Tugas</label>
-                    <textarea name="description" rows="3" class="w-full">{{ old('description') }}</textarea>
+                    <textarea name="description" rows="3" class="w-full">{{ old('description', request('customer_id') ? 'Lakukan penagihan sesuai invoice jatuh tempo.' : '') }}</textarea>
                 </div>
 
                 <!-- Bagian Lampiran -->
@@ -54,13 +55,13 @@
                         <label class="block text-xs mb-1" style="color:var(--slate);">Prioritas</label>
                         <select name="priority" class="w-full">
                             <option value="low" {{ old('priority') == 'low' ? 'selected' : '' }}>Low</option>
-                            <option value="medium" {{ old('priority') == 'medium' ? 'selected' : '' }}>Medium</option>
-                            <option value="high" {{ old('priority') == 'high' ? 'selected' : '' }}>High</option>
+                            <option value="medium" {{ old('priority', request('customer_id') ? 'high' : 'medium') == 'medium' ? 'selected' : '' }}>Medium</option>
+                            <option value="high" {{ old('priority', request('customer_id') ? 'high' : 'medium') == 'high' ? 'selected' : '' }}>High</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs mb-1" style="color:var(--slate);">Deadline</label>
-                        <input type="date" name="due_date" value="{{ old('due_date') }}" class="w-full" required>
+                        <input type="date" name="due_date" value="{{ old('due_date', date('Y-m-d')) }}" class="w-full" required>
                     </div>
                     <div>
                         <label class="block text-xs mb-1" style="color:var(--slate);">Status</label>

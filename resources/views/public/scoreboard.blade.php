@@ -207,61 +207,70 @@
     </div>
   </div>
 
-  <div class="stage">
+    <div class="stage">
 
     <!-- SLIDE 1: PODIUM + LEADERBOARD -->
     <div class="slide active" id="slide-0">
       <div class="lb-title">🏆 Ranking Penjualan Bulan Ini</div>
-      <div class="podium">
-        @if(isset($top3[1]))
-        <div class="pod second">
-          <div class="medal">🥈</div>
-          <div class="avatar">
-            @if($top3[1]->user && $top3[1]->user->photo) <img src="{{ asset('storage/' . $top3[1]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[1]->full_name, 0, 1)) }} @endif
-          </div>
-          <div class="rank">2</div>
-          <div class="name">{{ $top3[1]->full_name }}</div>
-          <div class="score">Rp {{ number_format($top3[1]->total_sales, 0, ',', '.') }}</div>
+      
+      @if($top3->isEmpty() && $rest->isEmpty())
+        <div class="empty-state" style="text-align:center; padding:60px 20px; color:var(--slate);">
+          <div style="font-size:40px; margin-bottom:10px;">📊</div>
+          <div style="font-size:18px; font-weight:bold; color:var(--paper);">Belum Ada Penjualan</div>
+          <div style="font-size:13px; margin-top:5px;">Data ranking akan muncul setelah ada transaksi order.</div>
         </div>
-        @endif
-        
-        @if(isset($top3[0]))
-        <div class="pod first">
-          <div class="medal">🥇</div>
-          <div class="avatar">
-            @if($top3[0]->user && $top3[0]->user->photo) <img src="{{ asset('storage/' . $top3[0]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[0]->full_name, 0, 1)) }} @endif
-          </div>
-          <div class="rank">1</div>
-          <div class="name">{{ $top3[0]->full_name }}</div>
-          <div class="score">Rp {{ number_format($top3[0]->total_sales, 0, ',', '.') }}</div>
-        </div>
-        @endif
-
-        @if(isset($top3[2]))
-        <div class="pod third">
-          <div class="medal">🥉</div>
-          <div class="avatar">
-            @if($top3[2]->user && $top3[2]->user->photo) <img src="{{ asset('storage/' . $top3[2]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[2]->full_name, 0, 1)) }} @endif
-          </div>
-          <div class="rank">3</div>
-          <div class="name">{{ $top3[2]->full_name }}</div>
-          <div class="score">Rp {{ number_format($top3[2]->total_sales, 0, ',', '.') }}</div>
-        </div>
-        @endif
-      </div>
-      <div class="lb-list">
-        @foreach($rest as $s)
-        <div class="lb-row">
-            <span class="lb-rank">{{ str_pad($loop->iteration + 3, 2, '0', STR_PAD_LEFT) }}</span>
-            <div class="lb-avatar">
-              @if($s->user && $s->user->photo) <img src="{{ asset('storage/' . $s->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($s->full_name, 0, 1)) }} @endif
+      @else
+        <div class="podium">
+          @if(isset($top3[1]))
+          <div class="pod second">
+            <div class="medal">🥈</div>
+            <div class="avatar">
+              @if($top3[1]->user && $top3[1]->user->photo) <img src="{{ asset('storage/' . $top3[1]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[1]->full_name, 0, 1)) }} @endif
             </div>
-            <span class="lb-name">{{ $s->full_name }}</span>
-            <div class="lb-bar-track"><div class="lb-bar-fill" style="width: {{ ($s->total_sales / $maxSales) * 100 }}%"></div></div>
-            <span class="lb-score">Rp {{ number_format($s->total_sales / 1000000, 1) }}jt</span>
+            <div class="rank">2</div>
+            <div class="name">{{ $top3[1]->full_name }}</div>
+            <div class="score">Rp {{ number_format($top3[1]->total_sales, 0, ',', '.') }}</div>
+          </div>
+          @endif
+          
+          @if(isset($top3[0]))
+          <div class="pod first">
+            <div class="medal">🥇</div>
+            <div class="avatar">
+              @if($top3[0]->user && $top3[0]->user->photo) <img src="{{ asset('storage/' . $top3[0]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[0]->full_name, 0, 1)) }} @endif
+            </div>
+            <div class="rank">1</div>
+            <div class="name">{{ $top3[0]->full_name }}</div>
+            <div class="score">Rp {{ number_format($top3[0]->total_sales, 0, ',', '.') }}</div>
+          </div>
+          @endif
+
+          @if(isset($top3[2]))
+          <div class="pod third">
+            <div class="medal">🥉</div>
+            <div class="avatar">
+              @if($top3[2]->user && $top3[2]->user->photo) <img src="{{ asset('storage/' . $top3[2]->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($top3[2]->full_name, 0, 1)) }} @endif
+            </div>
+            <div class="rank">3</div>
+            <div class="name">{{ $top3[2]->full_name }}</div>
+            <div class="score">Rp {{ number_format($top3[2]->total_sales, 0, ',', '.') }}</div>
+          </div>
+          @endif
         </div>
-        @endforeach
-      </div>
+        <div class="lb-list">
+          @foreach($rest as $s)
+          <div class="lb-row">
+              <span class="lb-rank">{{ str_pad($loop->iteration + 3, 2, '0', STR_PAD_LEFT) }}</span>
+              <div class="lb-avatar">
+                @if($s->user && $s->user->photo) <img src="{{ asset('storage/' . $s->user->photo) }}" alt="Foto"> @else {{ strtoupper(substr($s->full_name, 0, 1)) }} @endif
+              </div>
+              <span class="lb-name">{{ $s->full_name }}</span>
+              <div class="lb-bar-track"><div class="lb-bar-fill" style="width: {{ ($s->total_sales / max(1, $maxSales)) * 100 }}%"></div></div>
+              <span class="lb-score">Rp {{ number_format($s->total_sales / 1000000, 1) }}jt</span>
+          </div>
+          @endforeach
+        </div>
+      @endif
     </div>
 
     <!-- SLIDE 2: TARGET GAUGES -->
@@ -294,12 +303,19 @@
         <div class="stamp-badge">Target Tercapai {{ $topPerformerPct }}%</div>
         <div class="quote">"Kunjungan yang jujur dan konsisten hari ini adalah fondasi kepercayaan mitra esok hari."</div>
       </div>
+      @else
+        <div class="empty-state" style="text-align:center; padding:60px 20px; color:var(--slate);">
+          <div style="font-size:40px; margin-bottom:10px;">🌟</div>
+          <div style="font-size:18px; font-weight:bold; color:var(--paper);">Belum Ada Top Performer</div>
+          <div style="font-size:13px; margin-top:5px;">Top performer akan muncul setelah ada penjualan.</div>
+        </div>
       @endif
     </div>
 
     <!-- SLIDE 4: TOP PRODUCTS -->
     <div class="slide" id="slide-3">
       <div class="lb-title">🔥 Produk Paling Laris Bulan Ini</div>
+      @if($topProducts->isNotEmpty())
       <div class="prod-list">
         @foreach($topProducts as $i => $p)
         <div class="prod-row">
@@ -309,12 +325,19 @@
             <div class="prod-qty">Terjual {{ $p->total_qty }} Pcs</div>
           </div>
           <div class="prod-bar-track">
-            <div class="prod-bar-fill" style="width: {{ ($p->total_qty / $maxQty) * 100 }}%"></div>
+            <div class="prod-bar-fill" style="width: {{ ($p->total_qty / max(1, $maxQty)) * 100 }}%"></div>
           </div>
           <div class="prod-total">{{ $p->total_qty }} Pcs</div>
         </div>
         @endforeach
       </div>
+      @else
+        <div class="empty-state" style="text-align:center; padding:60px 20px; color:var(--slate);">
+          <div style="font-size:40px; margin-bottom:10px;">📦</div>
+          <div style="font-size:18px; font-weight:bold; color:var(--paper);">Belum Ada Produk Terjual</div>
+          <div style="font-size:13px; margin-top:5px;">Statistik produk terlaris akan muncul di sini.</div>
+        </div>
+      @endif
     </div>
 
     <!-- SLIDE 5: TARGET ACHIEVEMENT BARS -->

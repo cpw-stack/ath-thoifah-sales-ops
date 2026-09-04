@@ -102,22 +102,33 @@
         </div>
     </div>
 
-    <!-- Statistik Pembelian (Pie Chart) -->
+    <!-- Statistik Pembelian (Pie Chart dengan Persentase) -->
     <div class="card p-5">
         <div class="text-lg font-bold mb-4" style="color:var(--ink);">Statistik Tipe Pembelian</div>
-        @if($paymentStats->count() > 0)
+        @php $totalPurchases = $paymentStats->sum(); @endphp
+        @if($totalPurchases > 0)
             <div class="flex flex-col md:flex-row items-center">
-                <div style="width: 200px; height: 200px;">
+                <div style="width: 200px; height: 200px; position: relative;">
                     <canvas id="paymentChart"></canvas>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                        <div class="text-[10px] uppercase font-bold" style="color:var(--slate);">Total</div>
+                        <div class="text-sm font-bold" style="color:var(--ink);">Rp {{ number_format($totalPurchases / 1000000, 1) }}jt</div>
+                    </div>
                 </div>
-                <div class="mt-4 md:mt-0 md:ml-6 space-y-2 w-full">
+                <div class="mt-4 md:mt-0 md:ml-6 space-y-3 w-full">
                     @foreach($paymentStats as $type => $total)
-                        <div class="flex justify-between items-center text-sm p-2 rounded-lg" style="background:var(--paper-dim);">
-                            <span class="font-semibold capitalize flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full" style="background: {{ $type == 'cash' ? '#2F6F4F' : ($type == 'konsinyasi' ? '#E8B23C' : '#C23B22') }}"></span>
-                                {{ $type }}
-                            </span>
-                            <span class="mono font-bold">Rp {{ number_format($total, 0, ',', '.') }}</span>
+                        @php $percentage = $totalPurchases > 0 ? round(($total / $totalPurchases) * 100, 1) : 0; @endphp
+                        <div class="p-2 rounded-lg" style="background:var(--paper-dim);">
+                            <div class="flex justify-between items-center text-sm mb-1">
+                                <span class="font-semibold capitalize flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full" style="background: {{ $type == 'cash' ? '#2F6F4F' : ($type == 'konsinyasi' ? '#E8B23C' : '#C23B22') }}"></span>
+                                    {{ $type }}
+                                </span>
+                                <span class="font-bold text-xs" style="color:var(--ink);">{{ $percentage }}%</span>
+                            </div>
+                            <div class="mono text-xs font-bold text-right" style="color:var(--slate);">
+                                Rp {{ number_format($total, 0, ',', '.') }}
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -169,7 +180,7 @@
                     <span class="mono">{{ $item->total_qty }} pcs</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ ($item->total_qty / $maxQty) * 100 }}%"></div>
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ ($item->total_qty / max(1, $maxQty)) * 100 }}%"></div>
                 </div>
             </div>
         @empty
@@ -222,37 +233,47 @@
     @if($receivables->count() > 0)
     <div class="space-y-4">
         @foreach($receivables as $r)
-        <div class="border rounded-xl p-4" style="border-color:var(--border);">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-sm">{{ $r->reference_code }}</span>
-                <span class="badge {{ $r->status == 'overdue' ? 'badge-red' : ($r->status == 'paid' ? 'badge-green' : 'badge-amber') }}">{{ $r->status }}</span>
-            </div>
-            <div class="text-xs mb-3" style="color:var(--slate);">Jatuh Tempo: {{ \Carbon\Carbon::parse($r->due_date)->format('d M Y') }}</div>
-            <div class="flex justify-between items-center text-sm mb-4">
-                <div>
-                    <div style="color:var(--slate);">Total Piutang</div>
-                    <div class="font-bold">Rp {{ number_format($r->total_amount, 0, ',', '.') }}</div>
-                </div>
-                <div class="text-right">
-                    <div style="color:var(--slate);">Sisa Tagihan</div>
-                    <div class="font-bold text-red-600">Rp {{ number_format($r->total_amount - $r->paid_amount, 0, ',', '.') }}</div>
-                </div>
-            </div>
+            @php $isUnpaid = $r->status != 'paid'; @endphp
             
-            @if($r->collections->count() > 0)
-            <div class="border-t pt-3" style="border-color:var(--border);">
-                <div class="text-xs font-bold mb-2" style="color:var(--slate);">Riwayat Pembayaran:</div>
-                <div class="space-y-2">
-                    @foreach($r->collections as $c)
-                    <div class="flex justify-between items-center text-xs">
-                        <span>{{ $c->payment_date->format('d M Y') }} - {{ $c->employee->full_name }}</span>
-                        <span class="font-bold text-green-600">Rp {{ number_format($c->amount, 0, ',', '.') }}</span>
+            <!-- Bungkus dengan link jika belum lunas -->
+            <a href="{{ $isUnpaid ? route('admin.tasks.create', ['customer_id' => $r->customer_id]) : '#' }}" class="block hover:bg-gray-50 transition-colors rounded-xl">
+                <div class="border rounded-xl p-4" style="border-color: {{ $isUnpaid ? 'var(--red)' : 'var(--border)' }}; background: {{ $isUnpaid ? 'var(--red-soft)' : '#fff' }};">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-sm">{{ $r->reference_code }}</span>
+                        <div class="flex items-center gap-2">
+                            @if($isUnpaid)
+                                <span class="text-xs font-bold text-red-600 bg-white px-2 py-1 rounded-full border" style="border-color:var(--red);">+ Buat Tugas Tagih</span>
+                            @endif
+                            <span class="badge {{ $r->status == 'overdue' ? 'badge-red' : ($r->status == 'paid' ? 'badge-green' : 'badge-amber') }}">{{ $r->status }}</span>
+                        </div>
                     </div>
-                    @endforeach
+                    <div class="text-xs mb-3" style="color:var(--slate);">Jatuh Tempo: {{ \Carbon\Carbon::parse($r->due_date)->format('d M Y') }}</div>
+                    <div class="flex justify-between items-center text-sm mb-4">
+                        <div>
+                            <div style="color:var(--slate);">Total Piutang</div>
+                            <div class="font-bold">Rp {{ number_format($r->total_amount, 0, ',', '.') }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div style="color:var(--slate);">Sisa Tagihan</div>
+                            <div class="font-bold text-red-600">Rp {{ number_format($r->total_amount - $r->paid_amount, 0, ',', '.') }}</div>
+                        </div>
+                    </div>
+                    
+                    @if($r->collections->count() > 0)
+                    <div class="border-t pt-3" style="border-color:var(--border);">
+                        <div class="text-xs font-bold mb-2" style="color:var(--slate);">Riwayat Pembayaran:</div>
+                        <div class="space-y-2">
+                            @foreach($r->collections as $c)
+                            <div class="flex justify-between items-center text-xs">
+                                <span>{{ $c->payment_date->format('d M Y') }} - {{ $c->employee->full_name }}</span>
+                                <span class="font-bold text-green-600">Rp {{ number_format($c->amount, 0, ',', '.') }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                 </div>
-            </div>
-            @endif
-        </div>
+            </a>
         @endforeach
     </div>
     @else
@@ -287,8 +308,18 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '70%',
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                return label + ': Rp ' + value.toLocaleString('id-ID');
+                            }
+                        }
+                    }
                 }
             }
         });

@@ -6,7 +6,7 @@
 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
     <div>
         <h2 class="display text-2xl">Product Management</h2>
-        <p class="text-sm" style="color:var(--slate);">Kelola daftar produk dan harga.</p>
+        <p class="text-sm" style="color:var(--slate);">Kelola daftar produk, HPP, dan harga jual.</p>
     </div>
     <a href="{{ route('admin.products.create') }}" class="btn w-full sm:w-auto text-center">+ Tambah Produk</a>
 </div>
@@ -15,7 +15,7 @@
     <div class="card p-4 mb-4" style="background:var(--green-soft); color:var(--green); border:1px solid var(--green);">{{ session('success') }}</div>
 @endif
 
-<!-- HEADER SEARCH & IMPORT (Tampil di semua layar) -->
+<!-- HEADER SEARCH & IMPORT -->
 <div class="card p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <form method="GET" action="{{ route('admin.products.index') }}" class="relative w-full md:max-w-xs">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau SKU..." class="w-full pr-9">
@@ -31,7 +31,7 @@
     </div>
 </div>
 
-<!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
+<!-- 1. TAMPILAN DESKTOP (Tabel) -->
 <div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[800px]">
@@ -41,19 +41,23 @@
                     <th class="p-4">Nama Produk</th>
                     <th class="p-4">Kategori</th>
                     <th class="p-4">Satuan</th>
-                    <th class="p-4">Harga</th>
+                    <th class="p-4">HPP</th>
+                    <th class="p-4">Harga Jual</th>
+                    <th class="p-4">Stok</th> 
                     <th class="p-4">Status</th>
                     <th class="p-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($products as $product)
-                <tr class="border-b hover:bg-gray-50" style="border-color:var(--border);">
+                <tr class="border-b" style="border-color:var(--border);">
                     <td class="p-4 mono text-xs">{{ $product->sku }}</td>
                     <td class="p-4 font-semibold text-sm">{{ $product->name }}</td>
                     <td class="p-4 text-sm">{{ $product->category->name ?? '-' }}</td>
                     <td class="p-4 text-sm">{{ $product->unit }}</td>
+                    <td class="p-4 mono text-sm">Rp {{ number_format($product->hpp, 0, ',', '.') }}</td>
                     <td class="p-4 mono text-sm">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
+                    <td class="p-4 text-center text-sm font-bold">{{ $product->stock }}</td> <!-- Tambahan -->
                     <td class="p-4">
                         @if($product->status == 'active')
                             <span class="badge badge-green">Active</span>
@@ -70,7 +74,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="p-8 text-center" style="color:var(--slate);">Produk tidak ditemukan.</td></tr>
+                <tr><td colspan="8" class="p-8 text-center" style="color:var(--slate);">Produk tidak ditemukan.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -80,7 +84,7 @@
     </div>
 </div>
 
-<!-- 2. TAMPILAN MOBILE (Card List) - Hanya muncul di layar HP -->
+<!-- 2. TAMPILAN MOBILE (Card List) -->
 <div class="md:hidden space-y-4">
     @forelse ($products as $product)
     <div class="card p-4">
@@ -106,7 +110,11 @@
                 <span class="font-semibold text-right">{{ $product->unit }}</span>
             </div>
             <div class="flex justify-between">
-                <span style="color:var(--slate);">Harga:</span>
+                <span style="color:var(--slate);">HPP (Modal):</span>
+                <span class="font-semibold text-right mono">Rp {{ number_format($product->hpp, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span style="color:var(--slate);">Harga Jual:</span>
                 <span class="font-semibold text-right mono">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
             </div>
         </div>
@@ -125,7 +133,6 @@
     </div>
     @endforelse
     
-    <!-- Pagination Mobile -->
     @if($products->hasPages())
     <div class="mt-4">
         {{ $products->appends(['search' => request('search')])->links() }}

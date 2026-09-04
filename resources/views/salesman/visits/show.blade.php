@@ -69,8 +69,9 @@
     .product-empty { text-align: center; font-size: 13.5px; color: var(--slate); padding: 24px 0; display: none; }
 
     .product-item { border-bottom: 1px solid var(--border); padding: 14px 0; }
-    .product-item .p-name { font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 8px; }
-    .product-item .p-price { font-size: 12.5px; color: var(--slate); margin-top: 2px; }
+    .product-item .p-name { font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+    .product-item .p-price { font-size: 12.5px; color: var(--slate); }
+    .stock-badge { font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; background: var(--paper-dim); color: var(--slate); }
 
     .qty-stepper { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
     .qty-stepper button { width: 40px; height: 40px; font-size: 20px; font-weight: 700; background: var(--paper-dim); border: none; color: var(--ink); cursor: pointer; }
@@ -198,7 +199,7 @@
                             <div class="product-item" data-name="{{ strtolower($p->name) }}">
                                 <div class="p-name">{{ $p->name }}</div>
                                 <input type="hidden" name="products[{{ $p->id }}][id]" value="{{ $p->id }}">
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 mt-2">
                                     <input type="number" name="products[{{ $p->id }}][stock_estimate]" placeholder="Estimasi Stok" value="{{ $existing->stock_estimate ?? '' }}" class="flex-1 p-2 text-sm rounded-lg border w-full" style="border-color:var(--border);" min="0">
                                     <select name="products[{{ $p->id }}][is_available]" class="p-2 text-sm rounded-lg border" style="border-color:var(--border);">
                                         <option value="1" {{ ($existing && $existing->is_available == 1) ? 'selected' : '' }}>Ada</option>
@@ -219,6 +220,13 @@
                 <span class="panel-title">Buat Order</span>
                 @if($visit->order) <span class="panel-status-pill done">Rp {{ number_format($visit->order->total_amount, 0, ',', '.') }}</span> @else <span class="panel-status-pill pending">Belum ada order</span> @endif
             </div>
+
+            @if(session('error'))
+                <div class="mb-4 p-3 rounded-xl text-sm font-medium" style="background:var(--red-soft); color:var(--red); border: 1px solid var(--red);">
+                    ⚠️ {{ session('error') }}
+                </div>
+            @endif
+
             @if($visit->order)
                 <div class="empty-state">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"></path></svg>
@@ -292,8 +300,13 @@
                     <div id="order-list">
                         @foreach($products as $p)
                         <div class="product-item" data-name="{{ strtolower($p->name) }}">
-                            <div class="p-name">{{ $p->name }}</div>
-                            <div class="p-price mb-2">Rp {{ number_format($p->price, 0, ',', '.') }}</div>
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex-1 pr-2">
+                                    <div class="p-name">{{ $p->name }}</div>
+                                    <div class="p-price">Rp {{ number_format($p->price, 0, ',', '.') }}</div>
+                                </div>
+                                <div class="stock-badge">Stok: {{ $p->stock }}</div>
+                            </div>
                             <input type="hidden" name="items[{{ $p->id }}][id]" value="{{ $p->id }}">
                             <div class="flex items-center gap-2">
                                 <button type="button" onclick="updateQty(this, -1)" class="w-10 h-10 rounded-lg border font-bold text-lg" style="border-color:var(--border); background:var(--paper-dim);">−</button>
