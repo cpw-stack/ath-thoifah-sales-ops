@@ -16,7 +16,7 @@ class Order extends Model
     // TAMBAHKAN RELASI INI
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     public function employee()

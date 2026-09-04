@@ -55,6 +55,7 @@ class EmployeeController extends Controller
             'sales_area_id' => 'nullable|exists:sales_areas,id',
             'supervisor_id' => 'nullable|exists:employees,id',
             'status' => 'required|in:active,inactive',
+            'type' => 'required|in:online,offline', // TAMBAHAN
         ]);
 
         // Upload Foto
@@ -88,6 +89,7 @@ class EmployeeController extends Controller
             'sales_area_id' => $validated['sales_area_id'] ?? null,
             'supervisor_id' => $validated['supervisor_id'] ?? null,
             'status' => $validated['status'],
+            'type' => $validated['type'], // TAMBAHAN
         ]);
 
         return redirect()->route('admin.employees.index')->with('success', 'Data salesman & akun berhasil ditambahkan.');
@@ -119,6 +121,7 @@ class EmployeeController extends Controller
             'sales_area_id' => 'nullable|exists:sales_areas,id',
             'supervisor_id' => 'nullable|exists:employees,id',
             'status' => 'required|in:active,inactive',
+            'type' => 'required|in:online,offline', // TAMBAHAN
         ]);
 
         $user = $employee->user;
@@ -150,6 +153,7 @@ class EmployeeController extends Controller
             'sales_area_id' => $validated['sales_area_id'] ?? null,
             'supervisor_id' => $validated['supervisor_id'] ?? null,
             'status' => $validated['status'],
+            'type' => $validated['type'], // TAMBAHAN
         ]);
 
         return redirect()->route('admin.employees.index')->with('success', 'Data salesman berhasil diperbarui.');

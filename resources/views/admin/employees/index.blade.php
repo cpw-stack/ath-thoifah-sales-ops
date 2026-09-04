@@ -23,19 +23,27 @@
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode..." class="w-full pr-9">
         <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
     </form>
-    <div class="flex items-center gap-2 text-xs" style="color:var(--slate);">
-        <span>Total Salesman:</span>
-        <span class="badge badge-slate">{{ $employees->total() }} Orang</span>
+    
+    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+        <!-- INFO TOTAL SALESMAN (Mencolok) -->
+        <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background:var(--ink); color:#fff;">
+            <span class="text-lg">🧑</span>
+            <div class="flex flex-col leading-tight">
+                <span class="font-bold text-base">{{ $employees->total() }}</span>
+                <span class="text-[10px] uppercase tracking-wider opacity-80 hidden sm:inline">Total Salesman</span>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
 <div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[640px]">
+        <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
                 <tr class="bg-gray-50 border-b" style="border-color:var(--border);">
                     <th class="p-4">Salesman</th>
+                    <th class="p-4">Tipe</th>
                     <th class="p-4">Area Penjualan</th>
                     <th class="p-4">Kontak</th>
                     <th class="p-4">Status</th>
@@ -59,6 +67,13 @@
                                 <div class="text-xs mono" style="color:var(--slate);">{{ $employee->employee_code }}</div>
                             </div>
                         </div>
+                    </td>
+                    <td class="p-4">
+                        @if($employee->type == 'online')
+                            <span class="badge badge-green">Online</span>
+                        @else
+                            <span class="badge badge-amber">Offline</span>
+                        @endif
                     </td>
                     <td class="p-4 text-sm">
                         @if($employee->salesArea) {{ $employee->salesArea->name }} @else <span class="text-gray-400">Belum diassign</span> @endif
@@ -108,7 +123,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="p-8 text-center" style="color:var(--slate);">Tidak ada data ditemukan.</td></tr>
+                <tr><td colspan="6" class="p-8 text-center" style="color:var(--slate);">Tidak ada data ditemukan.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -133,11 +148,18 @@
                     <div class="text-xs mono" style="color:var(--slate);">{{ $employee->employee_code }}</div>
                 </div>
             </div>
-            @if($employee->status == 'active')
-                <span class="badge badge-green">Active</span>
-            @else
-                <span class="badge badge-slate">Inactive</span>
-            @endif
+            <div class="flex flex-col items-end gap-1">
+                @if($employee->status == 'active')
+                    <span class="badge badge-green">Active</span>
+                @else
+                    <span class="badge badge-slate">Inactive</span>
+                @endif
+                @if($employee->type == 'online')
+                    <span class="badge badge-green">Online</span>
+                @else
+                    <span class="badge badge-amber">Offline</span>
+                @endif
+            </div>
         </div>
         
         <div class="text-xs space-y-2 mb-4 border-t pt-3" style="border-color:var(--border);">

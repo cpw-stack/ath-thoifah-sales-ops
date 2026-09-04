@@ -144,6 +144,10 @@
         <div style="margin:14px 16px 0; background:var(--green-soft); color:var(--green); font-size:14px; padding:12px 14px; border-radius:10px;">✅ {{ session('success') }}</div>
     @endif
 
+    @if(session('error'))
+        <div style="margin:14px 16px 0; background:var(--red-soft); color:var(--red); font-size:14px; padding:12px 14px; border-radius:10px;">⚠️ {{ session('error') }}</div>
+    @endif
+
     <!-- Panels -->
     <div class="step-panels">
 
@@ -220,13 +224,6 @@
                 <span class="panel-title">Buat Order</span>
                 @if($visit->order) <span class="panel-status-pill done">Rp {{ number_format($visit->order->total_amount, 0, ',', '.') }}</span> @else <span class="panel-status-pill pending">Belum ada order</span> @endif
             </div>
-
-            @if(session('error'))
-                <div class="mb-4 p-3 rounded-xl text-sm font-medium" style="background:var(--red-soft); color:var(--red); border: 1px solid var(--red);">
-                    ⚠️ {{ session('error') }}
-                </div>
-            @endif
-
             @if($visit->order)
                 <div class="empty-state">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"></path></svg>
@@ -516,14 +513,11 @@
             subtotal += (qty * price);
         });
 
-        // Tampilkan Subtotal
         document.getElementById('orderSubtotal').textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
 
-        // Hitung Diskon jika ada
         let discountEl = document.getElementById('orderDiscount');
         let discountAmount = 0;
         if (discountEl) {
-            // Ambil persentase dari teks diskon (misal: "Diskon (10%)" -> 10)
             let discountText = discountEl.previousElementSibling.textContent;
             let percent = parseFloat(discountText.match(/(\d+)%/)[1]);
             discountAmount = (subtotal * percent) / 100;

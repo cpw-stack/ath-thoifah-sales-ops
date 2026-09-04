@@ -191,4 +191,16 @@ class CustomerController extends Controller
         $discount->delete();
         return back()->with('success', 'Diskon untuk mitra ' . $customer->name . ' berhasil dihapus permanen.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:customers,id'
+        ]);
+
+        Customer::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.customers.index')->with('success', count($request->ids) . ' mitra berhasil dihapus.');
+    }
 }

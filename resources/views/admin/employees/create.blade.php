@@ -46,6 +46,13 @@
                 <div class="text-xs mb-4" style="color:var(--slate);">Detail karyawan untuk operasional lapangan.</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
+                        <label class="block text-xs mb-1" style="color:var(--slate);">Tipe Salesman</label>
+                        <select name="type" class="w-full" required>
+                            <option value="offline" {{ old('type', $employee->type ?? '') == 'offline' ? 'selected' : '' }}>Offline (Lapangan)</option>
+                            <option value="online" {{ old('type', $employee->type ?? '') == 'online' ? 'selected' : '' }}>Online (Tanpa Check-in)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs mb-1" style="color:var(--slate);">Kode Salesman</label>
                         <input type="text" name="employee_code" class="w-full" required>
                     </div>

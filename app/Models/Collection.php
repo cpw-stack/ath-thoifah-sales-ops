@@ -26,4 +26,9 @@ class Collection extends Model
     {
         return $this->belongsTo(Employee::class);
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class)->withTrashed();
+    }
 }

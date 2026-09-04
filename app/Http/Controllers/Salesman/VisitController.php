@@ -14,9 +14,9 @@ use App\Models\Collection;
 use App\Models\Task;
 use App\Models\Customer;
 use App\Models\VisitScheduleRequest;
-use App\Models\CustomerStockDiscount; // Ditambahkan untuk logika diskon
+use App\Models\CustomerStockDiscount;
+use App\Models\OnlineReport;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class VisitController extends Controller
@@ -25,68 +25,168 @@ class VisitController extends Controller
     {
         $user = auth()->user();
         
-        // Jika Admin, lihat semua visit hari ini (menggunakan layout app/dashboard)
+        // Jika Admin, lihat semua visit hari ini
         if ($user->hasRole('super-admin') || $user->hasRole('admin') || $user->hasRole('supervisor')) {
-            $statusFilter = request('status');
-            $employeeFilter = request('employee_id');
-            $customerFilter = request('customer_id');
-            
             $plans = VisitPlan::with('customer', 'visit', 'employee')
                 ->whereDate('visit_date', today())
-                ->when($statusFilter == 'planned', function($q) {
-                    $q->where('status', 'planned');
-                })
-                ->when($statusFilter == 'visited', function($q) {
-                    $q->where('status', 'completed')->whereHas('visit', function($q2) {
-                        $q2->whereNull('check_out_at');
-                    });
-                })
-                ->when($statusFilter == 'done', function($q) {
-                    $q->where('status', 'completed')->whereHas('visit', function($q2) {
-                        $q2->whereNotNull('check_out_at');
-                    });
-                })
-                ->when($employeeFilter, function($q) {
-                    $q->where('employee_id', request('employee_id'));
-                })
-                ->when($customerFilter, function($q) {
-                    $q->where('customer_id', request('customer_id'));
-                })
                 ->orderByRaw("FIELD(status, 'planned', 'completed')")
-                ->latest()
-                ->paginate(15);
-                
-            // Kirim data untuk dropdown filter
+                ->latest()->paginate(15);
             $employees = \App\Models\Employee::where('status', 'active')->get();
             $customers = \App\Models\Customer::where('status', 'active')->get();
-
             return view('admin.visits.monitoring', compact('plans', 'employees', 'customers'));
         }
 
-        // Jika Salesman, lihat visit miliknya saja (menggunakan layout mobile)
+        // Jika Salesman
         if (!$user->employee) {
             return redirect()->route('dashboard')->with('error', 'Data salesman belum lengkap.');
         }
 
-        $plans = VisitPlan::with('customer', 'visit')
-            ->where('employee_id', $user->employee->id)
-            ->whereDate('visit_date', today())
-            ->get();
+        $employee = $user->employee;
+        $isOnlineSalesman = $employee->type === 'online';
 
-        // AMBIL DATA USULAN JADWAL (Hari ini & Besok)
-        $scheduleRequests = VisitScheduleRequest::with('customer')
-            ->where('employee_id', $user->employee->id)
-            ->whereDate('visit_date', '>=', today())
-            ->orderBy('visit_date', 'asc')
-            ->get();
-
-        // Ambil tugas pending hari ini (dipertahankan agar tidak merusak view)
-        $tasks = Task::where('employee_id', $user->employee->id)
+        // Ambil tugas untuk semua tipe salesman
+        $tasks = Task::where('employee_id', $employee->id)
             ->where('status', 'pending')
             ->whereDate('due_date', today())
             ->get();
 
-        return view('salesman.visits.index', compact('plans', 'scheduleRequests', 'tasks'));
+        // Ambil status usulan jadwal (hanya untuk offline)
+        $scheduleRequests = VisitScheduleRequest::with('customer')
+            ->where('employee_id', $employee->id)
+            ->whereDate('visit_date', '>=', today())
+            ->orderBy('visit_date', 'asc')->get();
+
+        // Jika Salesman ONLINE
+        if ($isOnlineSalesman) {
+            $products = Product::where('status', 'active')->get();
+            $todayReports = OnlineReport::where('employee_id', $employee->id)
+                ->whereDate('report_date', today())->get();
+                
+            // AMBIL RIWAYAT 7 HARI TERAKHIR
+            $pastReports = OnlineReport::where('employee_id', $employee->id)
+                ->where('report_date', '>=', today()->subDays(7))
+                ->orderBy('report_date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return view('salesman.visits.index', compact('isOnlineSalesman', 'products', 'todayReports', 'pastReports', 'tasks', 'scheduleRequests'));
+        }
+
+        // Jika Salesman OFFLINE
+        $plans = VisitPlan::with('customer', 'visit')
+            ->where('employee_id', $employee->id)
+            ->whereDate('visit_date', today())->get();
+
+        return view('salesman.visits.index', compact('plans', 'tasks', 'scheduleRequests', 'isOnlineSalesman'));
+    }
+
+    // Fungsi untuk menyimpan laporan online
+    public function storeOnlineReport(Request $request)
+    {
+        $request->validate([
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|integer|min:1',
+            'notes' => 'nullable|string'
+        ]);
+
+        $employee = auth()->user()->employee;
+        $totalAmount = 0;
+        $reportItems = [];
+
+        foreach ($request->items as $item) {
+            $product = Product::find($item['id']);
+            $subtotal = $product->price * $item['qty'];
+            $totalAmount += $subtotal;
+            $reportItems[] = [
+                'product_id' => $product->id,
+                'qty' => $item['qty'],
+                'price' => $product->price,
+                'subtotal' => $subtotal
+            ];
+        }
+
+        $report = OnlineReport::create([
+            'employee_id' => $employee->id,
+            'report_date' => today(),
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'total_amount' => $totalAmount,
+            'notes' => $request->notes
+        ]);
+
+        $report->items()->createMany($reportItems);
+
+        return back()->with('success', 'Laporan online berhasil dikirim! Total Penjualan: Rp ' . number_format($totalAmount, 0, ',', '.'));
+    }
+
+    public function editOnlineReport(OnlineReport $onlineReport)
+    {
+        if (auth()->user()->employee->id !== $onlineReport->employee_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $products = Product::where('status', 'active')->get();
+        $onlineReport->load('items.product');
+
+        return view('salesman.visits.edit-online', compact('onlineReport', 'products'));
+    }
+
+    public function updateOnlineReport(Request $request, OnlineReport $onlineReport)
+    {
+        if (auth()->user()->employee->id !== $onlineReport->employee_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $request->validate([
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|integer|min:1',
+            'notes' => 'nullable|string'
+        ]);
+
+        $totalAmount = 0;
+        $reportItems = [];
+
+        foreach ($request->items as $item) {
+            $product = Product::find($item['id']);
+            $subtotal = $product->price * $item['qty'];
+            $totalAmount += $subtotal;
+            $reportItems[] = [
+                'product_id' => $product->id,
+                'qty' => $item['qty'],
+                'price' => $product->price,
+                'subtotal' => $subtotal
+            ];
+        }
+
+        $onlineReport->update([
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'total_amount' => $totalAmount,
+            'notes' => $request->notes
+        ]);
+
+        $onlineReport->items()->delete();
+        $onlineReport->items()->createMany($reportItems);
+
+        return redirect()->route('salesman.home')->with('success', 'Laporan online berhasil direvisi!');
+    }
+
+    public function destroyOnlineReport(OnlineReport $onlineReport)
+    {
+        if (auth()->user()->employee->id !== $onlineReport->employee_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $onlineReport->items()->delete();
+        $onlineReport->delete();
+
+        return redirect()->route('salesman.home')->with('success', 'Laporan online berhasil dihapus.');
     }
 
     public function show(Visit $visit)
@@ -94,23 +194,19 @@ class VisitController extends Controller
         $visit->load('customer', 'productChecks.product', 'order.items.product');
         $products = Product::where('status', 'active')->get();
         
-        // Ambil piutang toko
         $receivables = Receivable::where('customer_id', $visit->customer_id)
             ->where('status', '!=', 'paid')
             ->get();
             
-        // Ambil tugas yang ada lampirannya (untuk invoice penagihan)
-        $tasks = \App\Models\Task::where('customer_id', $visit->customer_id)
+        $tasks = Task::where('customer_id', $visit->customer_id)
             ->whereNotNull('attachment')
             ->get();
 
-        // AMBIL DATA DISKON MITRA
         $discount = CustomerStockDiscount::where('customer_id', $visit->customer_id)
             ->where('is_active', true)
             ->latest()
             ->first();
 
-        // Cek tipe salesman (online/offline)
         $isOnlineSalesman = $visit->employee->type === 'online';
 
         return view('salesman.visits.show', compact('visit', 'products', 'receivables', 'tasks', 'discount', 'isOnlineSalesman'));
@@ -118,34 +214,29 @@ class VisitController extends Controller
 
     public function showTask(Task $task)
     {
-        // Pastikan salesman hanya bisa melihat tugasnya sendiri
         if (auth()->user()->employee->id !== $task->employee_id) {
             abort(403, 'Anda tidak memiliki akses ke tugas ini.');
         }
 
         $task->load('customer', 'employee');
-        
         return view('salesman.tasks.show', compact('task'));
     }
 
     public function checkIn(Request $request, VisitPlan $plan)
     {
-        // Pastikan hanya salesman yang bersangkutan bisa check-in
         if (!auth()->user()->hasRole('salesman') || auth()->user()->employee->id != $plan->employee_id) {
             abort(403, 'Anda tidak bisa melakukan check-in untuk jadwal orang lain.');
         }
 
-        // Ubah validasi latitude & longitude menjadi nullable untuk testing di PC
         $request->validate([
             'latitude' => 'nullable',
             'longitude' => 'nullable',
             'photo' => 'required|image|max:2048'
         ]);
 
-        $customerLat = $plan->customer->latitude ?? -6.200000; // Default dummy
-        $customerLng = $plan->customer->longitude ?? 106.816666; // Default dummy
+        $customerLat = $plan->customer->latitude ?? -6.200000;
+        $customerLng = $plan->customer->longitude ?? 106.816666;
         
-        // Gunakan koordinat dummy jika GPS tidak didapat
         $lat = $request->latitude ?? -6.200000;
         $lng = $request->longitude ?? 106.816666;
         
@@ -215,7 +306,6 @@ class VisitController extends Controller
         $orderItems = [];
         $insufficientStock = [];
 
-        // 1. Cek ketersediaan stok gudang pusat terlebih dahulu
         foreach ($request->items as $item) {
             $product = Product::find($item['id']);
             if ($product->stock < $item['qty']) {
@@ -223,16 +313,12 @@ class VisitController extends Controller
             }
         }
 
-        // Jika ada stok yang kurang, batalkan transaksi dan kasih tau salesman
         if (count($insufficientStock) > 0) {
             return back()->with('error', 'Gagal membuat order. Stok gudang pusat tidak mencukupi untuk: ' . implode(', ', $insufficientStock))->withInput();
         }
 
-        // 2. Jika stok cukup, kurangi stok gudang pusat dan hitung total
         foreach ($request->items as $item) {
             $product = Product::find($item['id']);
-            
-            // Kurangi stok gudang pusat
             $product->decrement('stock', $item['qty']);
             
             $subtotal = $product->price * $item['qty'];
@@ -246,7 +332,6 @@ class VisitController extends Controller
             ]);
         }
 
-        // 3. Hitung diskon jika ada yang approved
         $discount = CustomerStockDiscount::where('customer_id', $visit->customer_id)
             ->where('is_active', true)
             ->where('is_approved', true)
@@ -258,7 +343,6 @@ class VisitController extends Controller
         }
         $finalAmount = $totalAmount - $discountAmount;
 
-        // 4. Simpan Order
         $order = Order::create([
             'order_code' => 'ORD-' . date('ymd') . '-' . Str::random(4),
             'visit_id' => $visit->id,
@@ -286,7 +370,6 @@ class VisitController extends Controller
 
         $receivable = Receivable::findOrFail($request->receivable_id);
         
-        // Pastikan tidak bayar lebih dari sisa tagihan
         if ($request->amount > $receivable->remaining_amount) {
             return back()->with('error', 'Jumlah pembayaran melebihi sisa tagihan (Rp ' . number_format($receivable->remaining_amount, 0, ',', '.') . ')');
         }
@@ -296,7 +379,6 @@ class VisitController extends Controller
             $proofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
         }
 
-        // Catat transaksi collection
         Collection::create([
             'receivable_id' => $receivable->id,
             'visit_id' => $visit->id,
@@ -309,7 +391,6 @@ class VisitController extends Controller
             'notes' => $request->notes
         ]);
 
-        // Update piutang
         $receivable->paid_amount += $request->amount;
         if ($receivable->paid_amount >= $receivable->total_amount) {
             $receivable->status = 'paid';
@@ -321,14 +402,8 @@ class VisitController extends Controller
         return back()->with('success', "Penagihan berhasil! Diterima Rp " . number_format($request->amount, 0, ',', '.'));
     }
 
-    // =========================================================
-    // FITUR BARU: Usulan Jadwal Kunjungan oleh Salesman
-    // =========================================================
-
     public function createSchedule()
     {
-        $employee = auth()->user()->employee;
-        // Ambil toko yang aktif
         $customers = Customer::where('status', 'active')->get();
         return view('salesman.schedule.create', compact('customers'));
     }
@@ -352,17 +427,12 @@ class VisitController extends Controller
         return redirect()->route('salesman.home')->with('success', 'Usulan jadwal berhasil dikirim, menunggu approval Admin.');
     }
 
-    // =========================================================
-    // FITUR BARU: Pengajuan Diskon oleh Salesman
-    // =========================================================
-
     public function proposeDiscount(Request $request, Visit $visit)
     {
         $request->validate([
             'discount_value' => 'required|numeric|min:0|max:100',
         ]);
 
-        // Gunakan updateOrCreate agar data diskon lama ditimpa, tidak menumpuk data baru
         CustomerStockDiscount::updateOrCreate(
             ['customer_id' => $visit->customer_id],
             [
@@ -370,14 +440,12 @@ class VisitController extends Controller
                 'value' => $request->discount_value,
                 'discount_value' => $request->discount_value,
                 'is_active' => true,
-                'is_approved' => false, // Set kembali ke menunggu approval
+                'is_approved' => false,
             ]
         );
 
         return back()->with('success', 'Pengajuan diskon ' . $request->discount_value . '% terkirim ke Admin.');
     }
-
-    // =========================================================
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {

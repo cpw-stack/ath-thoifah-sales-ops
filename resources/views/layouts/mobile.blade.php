@@ -119,7 +119,10 @@
       </div>
       <div class="text-right">
         <div class="mono text-xs" id="clockEl" style="color:#C7D2E3;">--:--</div>
-        <div class="chip chip-dark mt-2">Area: {{ auth()->user()->employee->salesArea->name ?? 'N/A' }}</div>
+        @php $emp = auth()->user()->employee; @endphp
+        <div class="chip chip-dark mt-2">
+          {{ $emp && $emp->type === 'online' ? 'Mode Online' : 'Area: ' . ($emp->salesArea->name ?? 'N/A') }}
+        </div>
       </div>
     </div>
   </div>
@@ -129,17 +132,23 @@
     @yield('content')
   </div>
 
-  <!-- BOTTOM NAV (Pure Link, No Alpine) -->
+  <!-- BOTTOM NAV (Dynamic based on Salesman Type) -->
   <div class="flex items-center justify-around py-2.5" style="background:var(--ink); padding-bottom:18px; flex-shrink:0; z-index:10;">
-    <a href="{{ route('salesman.home') }}" class="navbtn {{ request()->routeIs('salesman.home') ? 'active' : '' }}">
-      <span class="navicon">🏠</span> Beranda
+    @php $isOnline = $emp && $emp->type === 'online'; @endphp
+
+    <a href="{{ route('salesman.home') }}" class="navbtn {{ (request()->routeIs('salesman.home') || request()->routeIs('salesman.visits.index')) ? 'active' : '' }}">
+      <span class="navicon">{{ $isOnline ? '📝' : '🏠' }}</span> {{ $isOnline ? 'Laporan' : 'Beranda' }}
     </a>
-    <a href="{{ route('salesman.schedule.create') }}" class="navbtn {{ request()->routeIs('salesman.schedule.*') ? 'active' : '' }}">
-      <span class="navicon">📅</span> Jadwal
-    </a>
-    <a href="{{ route('salesman.visits.index') }}" class="navbtn {{ request()->routeIs('salesman.visits.*') ? 'active' : '' }}">
-      <span class="navicon">📍</span> Kunjungan
-    </a>
+
+    @if(!$isOnline)
+      <a href="{{ route('salesman.schedule.create') }}" class="navbtn {{ request()->routeIs('salesman.schedule.*') ? 'active' : '' }}">
+        <span class="navicon">📅</span> Jadwal
+      </a>
+      <a href="{{ route('salesman.visits.index') }}" class="navbtn {{ request()->routeIs('salesman.visits.*') ? 'active' : '' }}">
+        <span class="navicon">📍</span> Kunjungan
+      </a>
+    @endif
+
     <a href="{{ route('profile.edit') }}" class="navbtn {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
       <span class="navicon">👤</span> Akun
     </a>

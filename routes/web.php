@@ -91,6 +91,11 @@ Route::middleware(['auth'])->group(function () {
         // 2. Resource Routes (Diletakkan di BAWAH custom routes)
         Route::resource('areas', SalesAreaController::class);
         Route::resource('products', ProductController::class);
+        
+        // --- ROUTE BARU: Bulk Delete Customers ---
+        Route::delete('/customers/bulk-delete', [CustomerController::class, 'bulkDestroy'])->name('customers.bulk-destroy');
+        // -----------------------------------------
+        
         Route::resource('customers', CustomerController::class)->except(['show']); // Kecualikan show karena sudah didefinisikan di atas
         Route::resource('employees', EmployeeController::class);
         Route::resource('tasks', TaskController::class);
@@ -121,7 +126,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/schedule/create', [VisitController::class, 'createSchedule'])->name('schedule.create');
         Route::post('/schedule', [VisitController::class, 'storeSchedule'])->name('schedule.store');
         Route::get('/customers/{customer}/stocks', [VisitController::class, 'customerStocks'])->name('customers.stocks');
-        // ----------------------------------------------------
+        
+        // --- ROUTE BARU: Submit, Edit, Update, & Delete Laporan Online ---
+        Route::post('/online-report', [VisitController::class, 'storeOnlineReport'])->name('online.store');
+        Route::get('/online-report/{onlineReport}/edit', [VisitController::class, 'editOnlineReport'])->name('online.edit');
+        Route::put('/online-report/{onlineReport}', [VisitController::class, 'updateOnlineReport'])->name('online.update');
+        Route::delete('/online-report/{onlineReport}', [VisitController::class, 'destroyOnlineReport'])->name('online.destroy');
+        // -----------------------------------------------------------------
     });
 });
 
