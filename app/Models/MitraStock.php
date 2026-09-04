@@ -16,14 +16,13 @@ class MitraStock extends Model
         'qty_piutang',
     ];
 
-    // TAMBAHKAN RELASI INI
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function product()
+    public function customer()
     {
-        return $this->belongsTo(Product::class)->withTrashed();
+        return $this->belongsTo(Customer::class);
     }
 }
