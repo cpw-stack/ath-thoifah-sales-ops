@@ -88,4 +88,16 @@ class ProductController extends Controller
     {
         return Excel::download(new ProductTemplateExport, 'Template_Import_Produk.xlsx');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:products,id'
+        ]);
+
+        Product::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.products.index')->with('success', count($request->ids) . ' produk berhasil dihapus.');
+    }
 }

@@ -62,6 +62,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/products/template', [ProductController::class, 'template'])->name('products.template');
         Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+        
+        // --- ROUTE BARU: Bulk Delete Products ---
+        Route::delete('/products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-destroy');
+        // ----------------------------------------
 
         Route::get('/customers/template', [CustomerController::class, 'template'])->name('customers.template');
         Route::post('/customers/import', [CustomerController::class, 'import'])->name('customers.import');
