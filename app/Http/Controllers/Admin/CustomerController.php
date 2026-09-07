@@ -7,6 +7,9 @@ use App\Models\Customer;
 use App\Models\CustomerStockDiscount;
 use App\Models\Order;
 use App\Models\Receivable;
+use App\Models\Collection;
+use App\Models\Task;
+use App\Models\VisitPlan;
 use App\Models\MitraStock;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
@@ -77,9 +80,30 @@ class CustomerController extends Controller
         return redirect()->route('admin.customers.index')->with('success', 'Data mitra berhasil diperbarui.');
     }
 
-    public function destroy(Customer $customer)
+    public function destroy(Request $request, Customer $customer)
     {
+        // Cek apakah Admin mencentang "Hapus data terkait"
+        if ($request->boolean('force_delete_relations')) {
+            // Hapus Orders
+            Order::where('customer_id', $customer->id)->delete();
+            
+            // Hapus Tasks
+            Task::where('customer_id', $customer->id)->delete();
+            
+            // Hapus Visit Plans
+            VisitPlan::where('customer_id', $customer->id)->delete();
+            
+            // Hapus Receivables & Collections
+            $receivableIds = Receivable::where('customer_id', $customer->id)->pluck('id');
+            Collection::whereIn('receivable_id', $receivableIds)->delete();
+            Receivable::where('customer_id', $customer->id)->delete();
+
+            // Hapus Mitra Stocks
+            MitraStock::where('customer_id', $customer->id)->delete();
+        }
+
         $customer->delete();
+
         return redirect()->route('admin.customers.index')->with('success', 'Data mitra berhasil dihapus.');
     }
 
@@ -96,7 +120,7 @@ class CustomerController extends Controller
     }
 
     // =========================================================
-    // FITUR BARU: Detail Mitra & Manajemen Diskon
+    // FITUR: Detail Mitra & Manajemen Diskon
     // =========================================================
 
     public function show(Customer $customer)
@@ -198,6 +222,19 @@ class CustomerController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'exists:customers,id'
         ]);
+
+        // Untuk bulk delete, kita bisa sekalian hapus relasinya agar tidak ada data yatim
+        if ($request->boolean('force_delete_relations')) {
+            Order::whereIn('customer_id', $request->ids)->delete();
+            Task::whereIn('customer_id', $request->ids)->delete();
+            VisitPlan::whereIn('customer_id', $request->ids)->delete();
+            
+            $receivableIds = Receivable::whereIn('customer_id', $request->ids)->pluck('id');
+            Collection::whereIn('receivable_id', $receivableIds)->delete();
+            Receivable::whereIn('customer_id', $request->ids)->delete();
+            
+            MitraStock::whereIn('customer_id', $request->ids)->delete();
+        }
 
         Customer::whereIn('id', $request->ids)->delete();
 

@@ -3,52 +3,54 @@
 @section('title', 'Mitra Management')
 
 @section('content')
-<div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-    <div>
-        <h2 class="display text-2xl">Mitra Management</h2>
-        <p class="text-sm" style="color:var(--slate);">Kelola data toko dan limit kredit.</p>
-    </div>
-    <a href="{{ route('admin.customers.create') }}" class="btn w-full sm:w-auto text-center">+ Tambah Mitra</a>
-</div>
-
-@if (session('success'))
-    <div class="card p-4 mb-4" style="background:var(--green-soft); color:var(--green); border:1px solid var(--green);">{{ session('success') }}</div>
-@endif
-
-<!-- HEADER SEARCH & IMPORT (Tampil di semua layar) -->
-<div class="card p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
-    <form method="GET" action="{{ route('admin.customers.index') }}" class="relative w-full md:max-w-xs">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode toko..." class="w-full pr-9">
-        <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-    </form>
+<!-- x-data diletakkan di pembungkus utama agar tombol dan modal bisa terbaca -->
+<div x-data="{ 
+    deleteModal: false, deleteId: null, deleteName: '', forceDelete: false,
+    bulkModal: false, bulkForceDelete: false 
+}">
     
-    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-        <!-- INFO TOTAL MITRA (Mencolok) -->
-        <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background:var(--ink); color:#fff;">
-            <span class="text-lg">🏪</span>
-            <div class="flex flex-col leading-tight">
-                <span class="font-bold text-base">{{ $customers->total() }}</span>
-                <span class="text-[10px] uppercase tracking-wider opacity-80 hidden sm:inline">Total Mitra</span>
-            </div>
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+        <div>
+            <h2 class="display text-2xl">Mitra Management</h2>
+            <p class="text-sm" style="color:var(--slate);">Kelola data toko dan limit kredit.</p>
         </div>
-
-        <a href="{{ route('admin.customers.template') }}" class="btn-outline text-xs w-full sm:w-auto text-center">Download Template</a>
-        <form action="{{ route('admin.customers.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 w-full sm:w-auto">
-            @csrf
-            <input type="file" name="file" accept=".xlsx,.xls,.csv" class="text-xs border rounded p-1.5 w-full" style="border-color:var(--border);" required>
-            <button type="submit" class="btn text-xs whitespace-nowrap">Upload Excel</button>
-        </form>
+        <a href="{{ route('admin.customers.create') }}" class="btn w-full sm:w-auto text-center">+ Tambah Mitra</a>
     </div>
-</div>
 
-<!-- FORM BULK DELETE (Membungkus Tabel Desktop & Mobile) -->
-<form id="bulkDeleteForm" action="{{ route('admin.customers.bulk-destroy') }}" method="POST" onsubmit="return confirm('Hapus semua mitra yang dipilih?')">
-    @csrf
-    @method('DELETE')
-    
+    @if (session('success'))
+        <div class="card p-4 mb-4" style="background:var(--green-soft); color:var(--green); border:1px solid var(--green);">{{ session('success') }}</div>
+    @endif
+
+    <!-- HEADER SEARCH & IMPORT (Tampil di semua layar) -->
+    <div class="card p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <form method="GET" action="{{ route('admin.customers.index') }}" class="relative w-full md:max-w-xs">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode toko..." class="w-full pr-9">
+            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </form>
+        
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <!-- INFO TOTAL MITRA (Mencolok) -->
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background:var(--ink); color:#fff;">
+                <span class="text-lg">🏪</span>
+                <div class="flex flex-col leading-tight">
+                    <span class="font-bold text-base">{{ $customers->total() }}</span>
+                    <span class="text-[10px] uppercase tracking-wider opacity-80 hidden sm:inline">Total Mitra</span>
+                </div>
+            </div>
+
+            <a href="{{ route('admin.customers.template') }}" class="btn-outline text-xs w-full sm:w-auto text-center">Download Template</a>
+            <form action="{{ route('admin.customers.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 w-full sm:w-auto">
+                @csrf
+                <input type="file" name="file" accept=".xlsx,.xls,.csv" class="text-xs border rounded p-1.5 w-full" style="border-color:var(--border);" required>
+                <button type="submit" class="btn text-xs whitespace-nowrap">Upload Excel</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Tombol Bulk Delete (Akan muncul jika ada yang dicentang) -->
     <div class="mb-4 flex justify-end">
-        <button type="button" id="bulkDeleteBtn" class="btn text-xs hidden" style="background:var(--red);" onclick="submitBulkDelete()">
+        <!-- Tombol ini menggunakan @click Alpine.js untuk membuka modal bulk delete -->
+        <button type="button" id="bulkDeleteBtn" class="btn text-xs hidden" style="background:var(--red);" @click="bulkForceDelete = false; bulkModal = true">
             🗑️ Hapus Mitra Terpilih (<span id="selectedCount">0</span>)
         </button>
     </div>
@@ -85,13 +87,12 @@
                                 <span class="badge badge-slate">Inactive</span>
                             @endif
                         </td>
-                        <td class="p-4 text-right">
+                        <td class="p-4 text-right whitespace-nowrap">
                             <a href="{{ route('admin.customers.show', $customer) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail</a>
                             <a href="{{ route('admin.customers.edit', $customer) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
-                            <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
-                                @csrf @method('DELETE')
-                                <button class="text-red-600 text-xs font-bold">Hapus</button>
-                            </form>
+                            <button type="button" @click="deleteId = {{ $customer->id }}; deleteName = '{{ addslashes($customer->name) }}'; forceDelete = false; deleteModal = true" class="text-red-600 text-xs font-bold">
+                                Hapus
+                            </button>
                         </td>
                     </tr>
                     @empty
@@ -142,10 +143,9 @@
             <div class="flex gap-2 border-t pt-3" style="border-color:var(--border);">
                 <a href="{{ route('admin.customers.show', $customer) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Detail</a>
                 <a href="{{ route('admin.customers.edit', $customer) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Edit</a>
-                <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-bold p-2 border rounded" style="border-color:var(--border);">Hapus</button>
-                </form>
+                <button type="button" @click="deleteId = {{ $customer->id }}; deleteName = '{{ addslashes($customer->name) }}'; forceDelete = false; deleteModal = true" class="text-red-600 hover:text-red-800 text-xs font-bold p-2 border rounded" style="border-color:var(--border);">
+                    Hapus
+                </button>
             </div>
         </div>
         @empty
@@ -160,86 +160,134 @@
         </div>
         @endif
     </div>
-</form>
 
-<!-- Script untuk Bulk Delete Checkbox -->
-<script>
-    function toggleAll(selectAllCheckbox) {
-        // Hanya pilih checkbox yang terlihat di layar (visible)
-        let checkboxes = document.querySelectorAll('.mitra-checkbox');
-        checkboxes.forEach(cb => {
-            // Cek apakah elemen parent-nya tersembunyi atau tidak
-            if (cb.offsetParent !== null) {
-                cb.checked = selectAllCheckbox.checked;
-            }
-        });
-        updateBulkButton();
-    }
+    <!-- Modal Konfirmasi Hapus Satu Mitra (Alpine.js) -->
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display: none;">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
+            <h3 class="text-lg font-bold mb-2" style="color:var(--ink);">Konfirmasi Hapus Mitra</h3>
+            <p class="text-sm mb-4" style="color:var(--slate);">Apakah Anda yakin ingin menghapus <span x-text="deleteName" class="font-bold text-red-600"></span>?</p>
+            
+            <div class="mb-6 p-3 rounded-lg border" style="background:var(--paper-dim); border-color:var(--border);">
+                <label class="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" x-model="forceDelete" class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded">
+                    <span class="text-sm font-semibold" style="color:var(--ink);">Sekalian hapus semua riwayat Order, Piutang, dan Tugas terkait mitra ini.</span>
+                </label>
+                <p class="text-xs mt-2 ml-6" style="color:var(--slate);">*Jangan centang jika ingin menyimpan riwayat transaksi untuk keperluan audit.</p>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="deleteModal = false" class="btn-outline text-sm">Batal</button>
+                <form :action="'/admin/customers/' + deleteId" method="POST" id="deleteForm">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="force_delete_relations" :value="forceDelete ? 1 : 0">
+                    <button type="submit" class="btn text-sm" style="background:var(--red);">Hapus Sekarang</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
-    document.querySelectorAll('.mitra-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateBulkButton);
-    });
+    <!-- Modal Konfirmasi Bulk Delete (Alpine.js) -->
+    <div x-show="bulkModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display: none;">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-xl">
+            <h3 class="text-lg font-bold mb-2" style="color:var(--ink);">Konfirmasi Hapus Massal</h3>
+            <p class="text-sm mb-4" style="color:var(--slate);">Apakah Anda yakin ingin menghapus <span x-text="document.getElementById('selectedCount').textContent" class="font-bold text-red-600"></span> mitra terpilih?</p>
+            
+            <div class="mb-6 p-3 rounded-lg border" style="background:var(--paper-dim); border-color:var(--border);">
+                <label class="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" x-model="bulkForceDelete" class="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded">
+                    <span class="text-sm font-semibold" style="color:var(--ink);">Sekalian hapus semua riwayat Order, Piutang, dan Tugas terkait mitra-mitra ini.</span>
+                </label>
+                <p class="text-xs mt-2 ml-6" style="color:var(--slate);">*Jangan centang jika ingin menyimpan riwayat transaksi untuk keperluan audit.</p>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="bulkModal = false" class="btn-outline text-sm">Batal</button>
+                <button type="button" @click="submitBulkDelete(bulkForceDelete)" class="btn text-sm" style="background:var(--red);">Hapus Sekarang</button>
+            </div>
+        </div>
+    </div>
 
-    function updateBulkButton() {
-        // Hitung hanya yang tercentang dan terlihat
-        let visibleChecked = 0;
-        document.querySelectorAll('.mitra-checkbox:checked').forEach(cb => {
-            if (cb.offsetParent !== null) visibleChecked++;
-        });
-
-        let btn = document.getElementById('bulkDeleteBtn');
-        let countSpan = document.getElementById('selectedCount');
-        
-        if (visibleChecked > 0) {
-            btn.classList.remove('hidden');
-            countSpan.textContent = visibleChecked;
-        } else {
-            btn.classList.add('hidden');
+    <!-- Script untuk Checkbox & Bulk Delete -->
+    <script>
+        function toggleAll(selectAllCheckbox) {
+            let checkboxes = document.querySelectorAll('.mitra-checkbox');
+            checkboxes.forEach(cb => {
+                if (cb.offsetParent !== null) {
+                    cb.checked = selectAllCheckbox.checked;
+                }
+            });
+            updateBulkButton();
         }
-    }
 
-    function submitBulkDelete() {
-        let checkedIds = [];
-        document.querySelectorAll('.mitra-checkbox:checked').forEach(cb => {
-            if (cb.offsetParent !== null) { // Hanya ambil yang terlihat
-                checkedIds.push(cb.value);
+        document.querySelectorAll('.mitra-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateBulkButton);
+        });
+
+        function updateBulkButton() {
+            let visibleChecked = 0;
+            document.querySelectorAll('.mitra-checkbox:checked').forEach(cb => {
+                if (cb.offsetParent !== null) visibleChecked++;
+            });
+
+            let btn = document.getElementById('bulkDeleteBtn');
+            let countSpan = document.getElementById('selectedCount');
+            
+            if (visibleChecked > 0) {
+                btn.classList.remove('hidden');
+                countSpan.textContent = visibleChecked;
+            } else {
+                btn.classList.add('hidden');
             }
-        });
+        }
 
-        // Hapus duplikat jika ada (safety net)
-        let uniqueIds = [...new Set(checkedIds)];
+        // Fungsi ini dipanggil saat tombol "Hapus Sekarang" di modal bulk delete diklik
+        function submitBulkDelete(isForceDelete) {
+            let checkedIds = [];
+            document.querySelectorAll('.mitra-checkbox:checked').forEach(cb => {
+                if (cb.offsetParent !== null) {
+                    checkedIds.push(cb.value);
+                }
+            });
 
-        if (uniqueIds.length === 0) return;
+            let uniqueIds = [...new Set(checkedIds)];
+            if (uniqueIds.length === 0) return;
 
-        if (!confirm('Hapus ' + uniqueIds.length + ' mitra yang dipilih?')) return;
+            let form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("admin.customers.bulk-destroy") }}';
 
-        // Buat form virtual untuk submit
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("admin.customers.bulk-destroy") }}'; // Ganti route ini untuk produk
+            let csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
 
-        let csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = '{{ csrf_token() }}';
-        form.appendChild(csrfToken);
+            let methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
 
-        let methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'DELETE';
-        form.appendChild(methodField);
+            // Sertakan input force_delete_relations dari parameter isForceDelete
+            let forceInput = document.createElement('input');
+            forceInput.type = 'hidden';
+            forceInput.name = 'force_delete_relations';
+            forceInput.value = isForceDelete ? 1 : 0;
+            form.appendChild(forceInput);
 
-        uniqueIds.forEach(id => {
-            let input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'ids[]';
-            input.value = id;
-            form.appendChild(input);
-        });
+            uniqueIds.forEach(id => {
+                let input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
+                form.appendChild(input);
+            });
 
-        document.body.appendChild(form);
-        form.submit();
-    }
-</script>
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+</div> <!-- Penutup div x-data -->
 @endsection

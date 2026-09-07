@@ -89,6 +89,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('visit-plans', VisitPlanController::class); 
 
         // 2. Resource Routes (Diletakkan di BAWAH custom routes)
+        
+        // --- ROUTE BARU: Bulk Delete Areas ---
+        Route::delete('/areas/bulk-delete', [SalesAreaController::class, 'bulkDestroy'])->name('areas.bulk-destroy');
+        // -------------------------------------
+        
         Route::resource('areas', SalesAreaController::class);
         Route::resource('products', ProductController::class);
         

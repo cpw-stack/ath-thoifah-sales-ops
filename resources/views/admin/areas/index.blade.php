@@ -31,12 +31,20 @@
     </div>
 </div>
 
+<!-- Tombol Bulk Delete (Akan muncul jika ada yang dicentang) -->
+<div class="mb-4 flex justify-end">
+    <button type="button" id="bulkDeleteBtn" class="btn text-xs hidden" style="background:var(--red);" onclick="submitBulkDelete()">
+        🗑️ Hapus Area Terpilih (<span id="selectedCount">0</span>)
+    </button>
+</div>
+
 <!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
 <div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[600px]">
             <thead>
                 <tr class="bg-gray-50 border-b" style="border-color:var(--border);">
+                    <th class="p-4 w-10"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
                     <th class="p-4">Kode Area</th>
                     <th class="p-4">Nama Area</th>
                     <th class="p-4">Deskripsi</th>
@@ -45,11 +53,12 @@
             </thead>
             <tbody>
                 @forelse ($areas as $area)
-                <tr class="border-b hover:bg-gray-50" style="border-color:var(--border);">
+                <tr class="border-b" style="border-color:var(--border);">
+                    <td class="p-4"><input type="checkbox" name="ids[]" value="{{ $area->id }}" class="area-checkbox"></td>
                     <td class="p-4 mono text-xs">{{ $area->code }}</td>
                     <td class="p-4 font-semibold text-sm">{{ $area->name }}</td>
                     <td class="p-4 text-sm" style="color:var(--slate);">{{ $area->description ?? '-' }}</td>
-                    <td class="p-4 text-right">
+                    <td class="p-4 text-right whitespace-nowrap">
                         <a href="{{ route('admin.areas.edit', $area) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
                         <form action="{{ route('admin.areas.destroy', $area) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data ini?')">
                             @csrf @method('DELETE')
@@ -58,7 +67,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="4" class="p-8 text-center" style="color:var(--slate);">Area tidak ditemukan.</td></tr>
+                <tr><td colspan="5" class="p-8 text-center" style="color:var(--slate);">Area tidak ditemukan.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -73,9 +82,12 @@
     @forelse ($areas as $area)
     <div class="card p-4">
         <div class="flex items-start justify-between mb-3">
-            <div>
-                <div class="font-semibold text-base" style="color:var(--ink);">{{ $area->name }}</div>
-                <div class="text-xs mono" style="color:var(--slate);">Kode: {{ $area->code }}</div>
+            <div class="flex items-center gap-3">
+                <input type="checkbox" name="ids[]" value="{{ $area->id }}" class="area-checkbox mt-1">
+                <div>
+                    <div class="font-semibold text-base" style="color:var(--ink);">{{ $area->name }}</div>
+                    <div class="text-xs mono" style="color:var(--slate);">Kode: {{ $area->code }}</div>
+                </div>
             </div>
         </div>
         
@@ -100,11 +112,86 @@
     </div>
     @endforelse
     
-    <!-- Pagination Mobile -->
     @if($areas->hasPages())
     <div class="mt-4">
         {{ $areas->appends(['search' => request('search')])->links() }}
     </div>
     @endif
 </div>
+
+<!-- Script untuk Bulk Delete Checkbox -->
+<script>
+    function toggleAll(selectAllCheckbox) {
+        let checkboxes = document.querySelectorAll('.area-checkbox');
+        checkboxes.forEach(cb => {
+            if (cb.offsetParent !== null) {
+                cb.checked = selectAllCheckbox.checked;
+            }
+        });
+        updateBulkButton();
+    }
+
+    document.querySelectorAll('.area-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateBulkButton);
+    });
+
+    function updateBulkButton() {
+        let visibleChecked = 0;
+        document.querySelectorAll('.area-checkbox:checked').forEach(cb => {
+            if (cb.offsetParent !== null) visibleChecked++;
+        });
+
+        let btn = document.getElementById('bulkDeleteBtn');
+        let countSpan = document.getElementById('selectedCount');
+        
+        if (visibleChecked > 0) {
+            btn.classList.remove('hidden');
+            countSpan.textContent = visibleChecked;
+        } else {
+            btn.classList.add('hidden');
+        }
+    }
+
+    function submitBulkDelete() {
+        let checkedIds = [];
+        document.querySelectorAll('.area-checkbox:checked').forEach(cb => {
+            if (cb.offsetParent !== null) {
+                checkedIds.push(cb.value);
+            }
+        });
+
+        let uniqueIds = [...new Set(checkedIds)];
+
+        if (uniqueIds.length === 0) return;
+
+        if (!confirm('Hapus ' + uniqueIds.length + ' area yang dipilih?')) return;
+
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("admin.areas.bulk-destroy") }}';
+
+        let csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = '{{ csrf_token() }}';
+        form.appendChild(csrfToken);
+
+        let methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'DELETE';
+        form.appendChild(methodField);
+
+        uniqueIds.forEach(id => {
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
 @endsection

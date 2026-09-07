@@ -62,6 +62,18 @@ class SalesAreaController extends Controller
         return redirect()->route('admin.areas.index')->with('success', 'Area penjualan berhasil dihapus.');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:sales_areas,id'
+        ]);
+
+        SalesArea::whereIn('id', $request->ids)->delete();
+
+        return redirect()->route('admin.areas.index')->with('success', count($request->ids) . ' area berhasil dihapus.');
+    }
+
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
