@@ -191,22 +191,36 @@ class EmployeeController extends Controller
             'collection' => $target ? min(100, round(($stats['collections'] / $target->collection_target) * 100)) : 0,
         ];
 
-        // Riwayat SEMUA Transaksi Bulan Ini
-        $monthlyOrders = \App\Models\Order::with('customer')
-            ->where('employee_id', $employee->id)
-            ->whereMonth('created_at', $today->month)
-            ->whereYear('created_at', $today->year)
-            ->latest()->get();
+        // Inisialisasi variabel riwayat
+        $monthlyOrders = collect();
+        $monthlyVisits = collect();
+        $monthlyOnlineReports = collect();
 
-        $monthlyVisits = \App\Models\Visit::with('customer')
-            ->where('employee_id', $employee->id)
-            ->whereMonth('check_in_at', $today->month)
-            ->whereYear('check_in_at', $today->year)
-            ->latest()->get();
+        // Jika Salesman Offline
+        if ($employee->type == 'offline') {
+            $monthlyOrders = \App\Models\Order::with('customer')
+                ->where('employee_id', $employee->id)
+                ->whereMonth('created_at', $today->month)
+                ->whereYear('created_at', $today->year)
+                ->latest()->get();
 
-        return view('admin.employees.show', compact('employee', 'target', 'stats', 'metrics', 'monthlyOrders', 'monthlyVisits'));
-
+            $monthlyVisits = \App\Models\Visit::with('customer')
+                ->where('employee_id', $employee->id)
+                ->whereMonth('check_in_at', $today->month)
+                ->whereYear('check_in_at', $today->year)
+                ->latest()->get();
+        } 
+        // Jika Salesman Online
+        else {
+            $monthlyOnlineReports = \App\Models\OnlineReport::with('items.product')
+                ->where('employee_id', $employee->id)
+                ->whereMonth('report_date', $today->month)
+                ->whereYear('report_date', $today->year)
+                ->latest()->get();
         }
+
+        return view('admin.employees.show', compact('employee', 'target', 'stats', 'metrics', 'monthlyOrders', 'monthlyVisits', 'monthlyOnlineReports'));
+    }
 
     public function downloadPdf(Employee $employee)
     {
@@ -231,25 +245,34 @@ class EmployeeController extends Controller
             'collection' => $target ? min(100, round(($stats['collections'] / $target->collection_target) * 100)) : 0,
         ];
 
-        $monthlyOrders = \App\Models\Order::with('customer')
-            ->where('employee_id', $employee->id)
-            ->whereMonth('created_at', $today->month)
-            ->whereYear('created_at', $today->year)
-            ->latest()->get();
+        $monthlyOrders = collect();
+        $monthlyVisits = collect();
+        $monthlyOnlineReports = collect();
 
-        $monthlyVisits = \App\Models\Visit::with('customer')
-            ->where('employee_id', $employee->id)
-            ->whereMonth('check_in_at', $today->month)
-            ->whereYear('check_in_at', $today->year)
-            ->latest()->get();
+        if ($employee->type == 'offline') {
+            $monthlyOrders = \App\Models\Order::with('customer')
+                ->where('employee_id', $employee->id)
+                ->whereMonth('created_at', $today->month)
+                ->whereYear('created_at', $today->year)
+                ->latest()->get();
 
-        // Load view khusus untuk PDF
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.employees.pdf', compact('employee', 'target', 'stats', 'metrics', 'monthlyOrders', 'monthlyVisits'));
+            $monthlyVisits = \App\Models\Visit::with('customer')
+                ->where('employee_id', $employee->id)
+                ->whereMonth('check_in_at', $today->month)
+                ->whereYear('check_in_at', $today->year)
+                ->latest()->get();
+        } else {
+            $monthlyOnlineReports = \App\Models\OnlineReport::with('items.product')
+                ->where('employee_id', $employee->id)
+                ->whereMonth('report_date', $today->month)
+                ->whereYear('report_date', $today->year)
+                ->latest()->get();
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.employees.pdf', compact('employee', 'target', 'stats', 'metrics', 'monthlyOrders', 'monthlyVisits', 'monthlyOnlineReports'));
         
-        // Set paper size ke A4 dan orientasi Portrait
         $pdf->setPaper('A4', 'portrait');
 
-        // Download file PDF
         return $pdf->download('Laporan-Performa-' . $employee->full_name . '-' . $today->format('F-Y') . '.pdf');
     }
 

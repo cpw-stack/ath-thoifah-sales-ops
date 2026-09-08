@@ -118,55 +118,92 @@
 </div>
 
 <!-- Riwayat Aktivitas Bulan Ini -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Monthly Visits -->
+@if($employee->type == 'online')
+    <!-- Khusus Salesman Online -->
     <div class="card p-5">
         <div class="flex justify-between items-center mb-4">
-            <div class="sectiontitle">Riwayat Kunjungan Bulan Ini</div>
-            <span class="badge badge-slate">{{ $monthlyVisits->count() }} Kunjungan</span>
+            <div class="sectiontitle">Riwayat Laporan Online Bulan Ini</div>
+            <span class="badge badge-slate">{{ $monthlyOnlineReports->count() }} Laporan</span>
         </div>
-        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-            @forelse($monthlyVisits as $v)
-            <div class="flex justify-between items-center pb-3 border-b" style="border-color:var(--border);">
-                <div>
-                    <div class="text-sm font-semibold" style="color:var(--ink);">{{ $v->customer->name ?? '-' }}</div>
-                    <div class="text-xs" style="color:var(--slate);">{{ $v->check_in_at->format('d M Y H:i') }}</div>
+        <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            @forelse($monthlyOnlineReports as $rep)
+            <div class="pb-4 border-b" style="border-color:var(--border);">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <div class="text-sm font-bold" style="color:var(--ink);">{{ \Carbon\Carbon::parse($rep->report_date)->translatedFormat('l, d M Y') }}</div>
+                        <div class="text-xs" style="color:var(--slate);">Jam: {{ $rep->start_time }} - {{ $rep->end_time }}</div>
+                        @if($rep->notes)
+                        <div class="text-xs italic mt-1" style="color:var(--slate);">"{{ $rep->notes }}"</div>
+                        @endif
+                    </div>
+                    <span class="badge badge-green">Rp {{ number_format($rep->total_amount, 0, ',', '.') }}</span>
                 </div>
-                @if($v->check_out_at)
-                    <span class="badge badge-green">Selesai</span>
-                @else
-                    <span class="badge badge-amber">Sedang Visit</span>
-                @endif
+                <div class="mt-2 pl-4 border-l-2" style="border-color:var(--paper-dim);">
+                    @foreach($rep->items as $item)
+                        <div class="flex justify-between text-xs py-1">
+                            <span style="color:var(--ink);">{{ $item->qty }}x {{ $item->product->name }}</span>
+                            <span class="mono" style="color:var(--slate);">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                        </div>
+                    @endforeach
+                </div>
             </div>
             @empty
-            <p class="text-sm text-center py-4" style="color:var(--slate);">Belum ada kunjungan bulan ini.</p>
+            <p class="text-sm text-center py-4" style="color:var(--slate);">Belum ada laporan online bulan ini.</p>
             @endforelse
         </div>
     </div>
+@else
+    <!-- Khusus Salesman Offline -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Monthly Visits -->
+        <div class="card p-5">
+            <div class="flex justify-between items-center mb-4">
+                <div class="sectiontitle">Riwayat Kunjungan Bulan Ini</div>
+                <span class="badge badge-slate">{{ $monthlyVisits->count() }} Kunjungan</span>
+            </div>
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                @forelse($monthlyVisits as $v)
+                <div class="flex justify-between items-center pb-3 border-b" style="border-color:var(--border);">
+                    <div>
+                        <div class="text-sm font-semibold" style="color:var(--ink);">{{ $v->customer->name ?? '-' }}</div>
+                        <div class="text-xs" style="color:var(--slate);">{{ $v->check_in_at->format('d M Y H:i') }}</div>
+                    </div>
+                    @if($v->check_out_at)
+                        <span class="badge badge-green">Selesai</span>
+                    @else
+                        <span class="badge badge-amber">Sedang Visit</span>
+                    @endif
+                </div>
+                @empty
+                <p class="text-sm text-center py-4" style="color:var(--slate);">Belum ada kunjungan bulan ini.</p>
+                @endforelse
+            </div>
+        </div>
 
-    <!-- Monthly Orders -->
-    <div class="card p-5">
-        <div class="flex justify-between items-center mb-4">
-            <div class="sectiontitle">Riwayat Order Bulan Ini</div>
-            <span class="badge badge-slate">{{ $monthlyOrders->count() }} Order</span>
-        </div>
-        <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-            @forelse($monthlyOrders as $o)
-            <div class="flex justify-between items-center pb-3 border-b" style="border-color:var(--border);">
-                <div>
-                    <div class="text-sm font-semibold" style="color:var(--ink);">{{ $o->customer->name ?? '-' }}</div>
-                    <div class="text-xs mono" style="color:var(--slate);">{{ $o->order_code }} - {{ $o->created_at->format('d M Y') }}</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm font-bold" style="color:var(--ink);">Rp {{ number_format($o->total_amount, 0, ',', '.') }}</div>
-                    <span class="badge {{ $o->status == 'delivered' ? 'badge-green' : 'badge-slate' }}">{{ $o->status }}</span>
-                </div>
+        <!-- Monthly Orders -->
+        <div class="card p-5">
+            <div class="flex justify-between items-center mb-4">
+                <div class="sectiontitle">Riwayat Order Bulan Ini</div>
+                <span class="badge badge-slate">{{ $monthlyOrders->count() }} Order</span>
             </div>
-            @empty
-            <p class="text-sm text-center py-4" style="color:var(--slate);">Belum ada order bulan ini.</p>
-            @endforelse
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                @forelse($monthlyOrders as $o)
+                <div class="flex justify-between items-center pb-3 border-b" style="border-color:var(--border);">
+                    <div>
+                        <div class="text-sm font-semibold" style="color:var(--ink);">{{ $o->customer->name ?? '-' }}</div>
+                        <div class="text-xs mono" style="color:var(--slate);">{{ $o->order_code }} - {{ $o->created_at->format('d M Y') }}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold" style="color:var(--ink);">Rp {{ number_format($o->total_amount, 0, ',', '.') }}</div>
+                        <span class="badge {{ $o->status == 'delivered' ? 'badge-green' : 'badge-slate' }}">{{ $o->status }}</span>
+                    </div>
+                </div>
+                @empty
+                <p class="text-sm text-center py-4" style="color:var(--slate);">Belum ada order bulan ini.</p>
+                @endforelse
+            </div>
         </div>
     </div>
-</div>
+@endif
 
 @endsection

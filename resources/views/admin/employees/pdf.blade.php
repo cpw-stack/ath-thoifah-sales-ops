@@ -116,6 +116,35 @@
         @endif
     </div>
 
+    @if($employee->type == 'online')
+    <div class="section">
+        <div class="section-title">Riwayat Laporan Online Bulan Ini</div>
+        @if($monthlyOnlineReports->count() > 0)
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Jam Kerja</th>
+                    <th>Catatan</th>
+                    <th class="text-right">Total Penjualan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($monthlyOnlineReports as $rep)
+                <tr>
+                    <td>{{ \Carbon\Carbon::parse($rep->report_date)->format('d M Y') }}</td>
+                    <td>{{ $rep->start_time }} - {{ $rep->end_time }}</td>
+                    <td>{{ $rep->notes ?? '-' }}</td>
+                    <td class="text-right">Rp {{ number_format($rep->total_amount, 0, ',', '.') }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @else
+        <p style="text-align:center; padding:10px; background:#eee;">Tidak ada laporan online bulan ini.</p>
+        @endif
+    </div>
+    @else
     <div class="section">
         <div class="section-title">Riwayat Kunjungan Bulan Ini</div>
         @if($monthlyVisits->count() > 0)
@@ -171,6 +200,7 @@
         <p style="text-align:center; padding:10px; background:#eee;">Tidak ada order bulan ini.</p>
         @endif
     </div>
+    @endif
 
     <div class="footer">
         Dokumen ini dicetak secara otomatis pada {{ now()->format('d M Y H:i') }} dari Sistem Sales Operations Ath-Thoifah.
