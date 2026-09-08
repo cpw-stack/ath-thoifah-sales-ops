@@ -16,14 +16,21 @@
 @endif
 
 <!-- HEADER SEARCH & IMPORT -->
-<div class="card p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
-    <form method="GET" action="{{ route('admin.products.index') }}" class="relative w-full md:max-w-xs">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau SKU..." class="w-full pr-9">
-        <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-    </form>
+<div class="card p-5 mb-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5">
     
-    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-        <!-- INFO TOTAL PRODUK (Lebih Mencolok) -->
+    <!-- Left Side: Search -->
+    <div class="flex flex-col gap-2 w-full md:max-w-xs">
+        <label class="text-xs font-bold uppercase tracking-wider" style="color:var(--slate);">Cari Produk</label>
+        <div class="relative">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama atau SKU..." class="w-full pr-9">
+            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+    </div>
+
+    <!-- Right Side: Stats & Actions -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+        
+        <!-- Stat: Total Products -->
         <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background:var(--ink); color:#fff;">
             <span class="text-lg">📦</span>
             <div class="flex flex-col leading-tight">
@@ -31,13 +38,28 @@
                 <span class="text-[10px] uppercase tracking-wider opacity-80 hidden sm:inline">Total Produk</span>
             </div>
         </div>
-        
-        <a href="{{ route('admin.products.template') }}" class="btn-outline text-xs w-full sm:w-auto text-center">Download Template</a>
-        <form action="{{ route('admin.products.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2 w-full sm:w-auto">
-            @csrf
-            <input type="file" name="file" accept=".xlsx,.xls,.csv" class="text-xs border rounded p-1.5 w-full" style="border-color:var(--border);" required>
-            <button type="submit" class="btn text-xs whitespace-nowrap">Upload Excel</button>
-        </form>
+
+        <!-- Actions Group -->
+        <div class="flex flex-col sm:flex-row items-stretch gap-3 flex-1 md:flex-none">
+            
+            <!-- Export Button -->
+            <a href="{{ route('admin.products.template') }}" class="btn-outline text-xs flex items-center justify-center gap-2" title="Download semua data produk untuk di-edit/update">
+                <span>📥</span> Export Data
+            </a>
+
+            <!-- Import Form -->
+            <div class="flex flex-col gap-1 flex-1">
+                <form action="{{ route('admin.products.import') }}" method="POST" enctype="multipart/form-data" class="flex items-stretch gap-2 w-full">
+                    @csrf
+                    <input type="file" name="file" accept=".xlsx,.xls,.csv" class="text-xs border rounded p-1.5 w-full" style="border-color:var(--border);" required onchange="document.getElementById('uploadBtn').disabled = !this.files.length">
+                    <button type="submit" id="uploadBtn" class="btn text-xs whitespace-nowrap" disabled>Upload & Update</button>
+                </form>
+                <p class="text-[10px] text-left sm:text-right w-full" style="color:var(--slate);">
+                    *Jika SKU sudah ada, data akan diupdate.
+                </p>
+            </div>
+
+        </div>
     </div>
 </div>
 

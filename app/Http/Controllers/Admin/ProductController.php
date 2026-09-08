@@ -80,8 +80,24 @@ class ProductController extends Controller
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        
+        // Hitung jumlah produk sebelum import
+        $beforeCount = Product::count();
+        
         Excel::import(new ProductImport, $request->file('file'));
-        return back()->with('success', 'Data produk berhasil diimpor!');
+        
+        // Hitung jumlah produk setelah import
+        $afterCount = Product::count();
+        $newProducts = $afterCount - $beforeCount;
+
+        $message = 'Data produk berhasil diproses!';
+        if ($newProducts > 0) {
+            $message .= ' (' . $newProducts . ' produk baru ditambahkan, sisanya diupdate).';
+        } else {
+            $message .= ' (Semua data existing berhasil diupdate).';
+        }
+
+        return back()->with('success', $message);
     }
 
     public function template()

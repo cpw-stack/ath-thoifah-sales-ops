@@ -110,8 +110,24 @@ class CustomerController extends Controller
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        
+        // Hitung jumlah mitra sebelum import
+        $beforeCount = Customer::count();
+        
         Excel::import(new CustomerImport, $request->file('file'));
-        return back()->with('success', 'Data mitra berhasil diimpor!');
+        
+        // Hitung jumlah mitra setelah import
+        $afterCount = Customer::count();
+        $newCustomers = $afterCount - $beforeCount;
+
+        $message = 'Data mitra berhasil diproses!';
+        if ($newCustomers > 0) {
+            $message .= ' (' . $newCustomers . ' mitra baru ditambahkan, sisanya diupdate).';
+        } else {
+            $message .= ' (Semua data existing berhasil diupdate).';
+        }
+
+        return back()->with('success', $message);
     }
 
     public function template()

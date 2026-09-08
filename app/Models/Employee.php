@@ -41,4 +41,10 @@ class Employee extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function supervisor()
+    {
+        // Relasi ke dirinya sendiri (Self-referencing)
+        return $this->belongsTo(Employee::class, 'supervisor_id');
+    }
 }

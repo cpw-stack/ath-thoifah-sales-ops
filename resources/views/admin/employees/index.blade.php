@@ -112,14 +112,13 @@
                             <span class="badge badge-slate">Inactive</span>
                         @endif
                     </td>
-                    <td class="p-4">
-                        <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('admin.employees.edit', $employee) }}" class="btn-outline text-xs" style="padding:6px 12px;">Edit</a>
-                            <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data salesman ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-bold p-2">Hapus</button>
-                            </form>
-                        </div>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        <a href="{{ route('admin.employees.show', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail Performance</a>
+                        <a href="{{ route('admin.employees.edit', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
+                        <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data salesman ini?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-red-600 text-xs font-bold">Hapus</button>
+                        </form>
                     </td>
                 </tr>
                 @empty
@@ -187,10 +186,11 @@
         </div>
 
         <div class="flex gap-2 border-t pt-3" style="border-color:var(--border);">
+            <a href="{{ route('admin.employees.show', $employee) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Detail</a>
             <a href="{{ route('admin.employees.edit', $employee) }}" class="btn-outline text-xs flex-1 text-center" style="padding:6px 12px;">Edit</a>
             <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data salesman ini?')">
                 @csrf @method('DELETE')
-                <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-bold p-2 border rounded" style="border-color:var(--border);">Hapus</button>
+                <button type="submit" class="text-red-600 text-xs font-bold p-2 border rounded" style="border-color:var(--border);">Hapus</button>
             </form>
         </div>
     </div>

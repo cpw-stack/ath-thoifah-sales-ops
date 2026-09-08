@@ -164,4 +164,93 @@ class EmployeeController extends Controller
         $employee->delete();
         return redirect()->route('admin.employees.index')->with('success', 'Data salesman berhasil dihapus.');
     }
+
+    public function show(Employee $employee)
+    {
+        $employee->load('user', 'salesArea', 'supervisor');
+        
+        $today = today();
+        $period = $today->format('Y-m');
+
+        // Ambil target bulan ini
+        $target = $employee->target()->where('period_month', $period)->first();
+
+        // Statistik Real Bulan Ini
+        $stats = [
+            'visits' => \App\Models\Visit::where('employee_id', $employee->id)->whereMonth('check_in_at', $today->month)->count(),
+            'orders' => \App\Models\Order::where('employee_id', $employee->id)->whereMonth('created_at', $today->month)->count(),
+            'sales' => \App\Models\Order::where('employee_id', $employee->id)->whereMonth('created_at', $today->month)->sum('total_amount'),
+            'collections' => \App\Models\Collection::where('employee_id', $employee->id)->whereMonth('payment_date', $today->month)->sum('amount'),
+        ];
+
+        // Hitung Persentase Target
+        $metrics = [
+            'visit' => $target ? min(100, round(($stats['visits'] / $target->visit_target) * 100)) : 0,
+            'order' => $target ? min(100, round(($stats['orders'] / $target->order_target) * 100)) : 0,
+            'sales' => $target ? min(100, round(($stats['sales'] / $target->sales_target) * 100)) : 0,
+            'collection' => $target ? min(100, round(($stats['collections'] / $target->collection_target) * 100)) : 0,
+        ];
+
+        // Riwayat SEMUA Transaksi Bulan Ini
+        $monthlyOrders = \App\Models\Order::with('customer')
+            ->where('employee_id', $employee->id)
+            ->whereMonth('created_at', $today->month)
+            ->whereYear('created_at', $today->year)
+            ->latest()->get();
+
+        $monthlyVisits = \App\Models\Visit::with('customer')
+            ->where('employee_id', $employee->id)
+            ->whereMonth('check_in_at', $today->month)
+            ->whereYear('check_in_at', $today->year)
+            ->latest()->get();
+
+        return view('admin.employees.show', compact('employee', 'target', 'stats', 'metrics', 'monthlyOrders', 'monthlyVisits'));
+
+        }
+
+    public function downloadPdf(Employee $employee)
+    {
+        $employee->load('user', 'salesArea', 'supervisor');
+        
+        $today = today();
+        $period = $today->format('Y-m');
+
+        $target = $employee->target()->where('period_month', $period)->first();
+
+        $stats = [
+            'visits' => \App\Models\Visit::where('employee_id', $employee->id)->whereMonth('check_in_at', $today->month)->count(),
+            'orders' => \App\Models\Order::where('employee_id', $employee->id)->whereMonth('created_at', $today->month)->count(),
+            'sales' => \App\Models\Order::where('employee_id', $employee->id)->whereMonth('created_at', $today->month)->sum('total_amount'),
+            'collections' => \App\Models\Collection::where('employee_id', $employee->id)->whereMonth('payment_date', $today->month)->sum('amount'),
+        ];
+
+        $metrics = [
+            'visit' => $target ? min(100, round(($stats['visits'] / $target->visit_target) * 100)) : 0,
+            'order' => $target ? min(100, round(($stats['orders'] / $target->order_target) * 100)) : 0,
+            'sales' => $target ? min(100, round(($stats['sales'] / $target->sales_target) * 100)) : 0,
+            'collection' => $target ? min(100, round(($stats['collections'] / $target->collection_target) * 100)) : 0,
+        ];
+
+        $monthlyOrders = \App\Models\Order::with('customer')
+            ->where('employee_id', $employee->id)
+            ->whereMonth('created_at', $today->month)
+            ->whereYear('created_at', $today->year)
+            ->latest()->get();
+
+        $monthlyVisits = \App\Models\Visit::with('customer')
+            ->where('employee_id', $employee->id)
+            ->whereMonth('check_in_at', $today->month)
+            ->whereYear('check_in_at', $today->year)
+            ->latest()->get();
+
+        // Load view khusus untuk PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.employees.pdf', compact('employee', 'target', 'stats', 'metrics', 'monthlyOrders', 'monthlyVisits'));
+        
+        // Set paper size ke A4 dan orientasi Portrait
+        $pdf->setPaper('A4', 'portrait');
+
+        // Download file PDF
+        return $pdf->download('Laporan-Performa-' . $employee->full_name . '-' . $today->format('F-Y') . '.pdf');
+    }
+
 }

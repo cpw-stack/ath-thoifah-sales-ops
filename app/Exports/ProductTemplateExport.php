@@ -11,25 +11,24 @@ class ProductTemplateExport implements FromCollection, WithHeadings, WithMapping
 {
     public function collection()
     {
-        // Kita return collection kosong, tapi kita akan mapping manual di bawah agar tidak bingung
-        return collect([1]);
+        // Ambil semua data produk beserta relasi kategorinya
+        return Product::with('category')->get();
     }
 
-    public function map($row): array
+    public function map($product): array
     {
         return [
-            'A-1', 
-            'Kapsul Daun Kelor 60', 
-            'Kapsul', 
-            'Botol', 
-            50000, 
-            60000, 
-            100, // Tambahan Jumlah Stok
-            'active'
+            $product->sku,
+            $product->name,
+            $product->category->name ?? 'Uncategorized',
+            $product->unit,
+            $product->hpp,
+            $product->price,
+            $product->stock,
+            $product->status
         ];
     }
 
-    
     public function headings(): array
     {
         return [
@@ -39,7 +38,7 @@ class ProductTemplateExport implements FromCollection, WithHeadings, WithMapping
             "Satuan", 
             "HPP", 
             "Harga", 
-            "Jumlah Stok", // Tambahan
+            "Jumlah Stok", 
             "Status"
         ];
     }
