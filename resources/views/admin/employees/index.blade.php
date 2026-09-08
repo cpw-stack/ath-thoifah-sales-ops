@@ -39,7 +39,7 @@
 <!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
 <div class="card overflow-hidden hidden md:block">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+        <table class="w-full text-left border-collapse table-auto">
             <thead>
                 <tr class="bg-gray-50 border-b" style="border-color:var(--border);">
                     <th class="p-4">Salesman</th>
@@ -55,14 +55,14 @@
                 <tr class="border-b hover:bg-gray-50" style="border-color:var(--border);">
                     <td class="p-4">
                         <div class="flex items-center gap-3">
-                            <div class="avatar w-10 h-10 bg-gray-200">
+                            <div class="avatar w-10 h-10 bg-gray-200 flex-shrink-0">
                                 @if($employee->user && $employee->user->photo)
                                     <img src="{{ asset('storage/' . $employee->user->photo) }}" class="w-10 h-10 rounded-full object-cover">
                                 @else
                                     {{ strtoupper(substr($employee->full_name, 0, 1)) }}
                                 @endif
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <div class="font-semibold text-sm" style="color:var(--ink);">{{ $employee->full_name }}</div>
                                 <div class="text-xs mono" style="color:var(--slate);">{{ $employee->employee_code }}</div>
                             </div>
@@ -78,7 +78,7 @@
                     <td class="p-4 text-sm">
                         @if($employee->salesArea) {{ $employee->salesArea->name }} @else <span class="text-gray-400">Belum diassign</span> @endif
                     </td>
-                    <td class="p-4">
+                    <td class="p-4 max-w-[250px]"> <!-- Batasi lebar kolom kontak agar tidak melebar -->
                         <div class="flex flex-col gap-1 text-xs">
                             @if($employee->user && ($employee->user->whatsapp || $employee->phone_number))
                                 @php
@@ -113,7 +113,7 @@
                         @endif
                     </td>
                     <td class="p-4 text-right whitespace-nowrap">
-                        <a href="{{ route('admin.employees.show', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail Performance</a>
+                        <a href="{{ route('admin.employees.show', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail Performa</a>
                         <a href="{{ route('admin.employees.edit', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
                         <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data salesman ini?')">
                             @csrf @method('DELETE')
