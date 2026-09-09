@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Salesman')
+@section('title', 'Detail Performa Salesman')
 
 @section('content')
 <div class="mb-6 flex justify-between items-center">
     <div>
-        <h2 class="display text-2xl">Detail Salesman</h2>
+        <h2 class="display text-2xl">Detail Performa Salesman</h2>
         <p class="text-sm" style="color:var(--slate);">Statistik dan performa salesman.</p>
     </div>
     <div class="flex gap-3">

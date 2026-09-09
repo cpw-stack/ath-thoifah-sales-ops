@@ -123,7 +123,7 @@
                         @endif
                     </td>
                     <td class="p-4 text-right whitespace-nowrap">
-                        <a href="{{ route('admin.employees.show', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail</a>
+                        <a href="{{ route('admin.employees.show', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail Performance</a>
                         <a href="{{ route('admin.employees.edit', $employee) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
                         <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data salesman ini?')">
                             @csrf @method('DELETE')
