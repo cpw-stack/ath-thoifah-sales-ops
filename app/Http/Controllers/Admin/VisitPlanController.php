@@ -110,9 +110,9 @@ class VisitPlanController extends Controller
 
     public function approvalIndex()
     {
+        // Ambil semua jadwal yang berstatus pending, tanpa filter tanggal
         $pendingRequests = VisitScheduleRequest::with('employee', 'customer')
             ->where('status', 'pending')
-            ->whereDate('visit_date', '>=', today())
             ->orderBy('visit_date', 'asc')
             ->get();
 

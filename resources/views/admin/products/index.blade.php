@@ -22,8 +22,12 @@
     <div class="flex flex-col gap-2 w-full md:max-w-xs">
         <label class="text-xs font-bold uppercase tracking-wider" style="color:var(--slate);">Cari Produk</label>
         <div class="relative">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama atau SKU..." class="w-full pr-9">
-            <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <form method="GET" action="{{ route('admin.products.index') }}" class="w-full">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama atau SKU..." class="w-full pr-9">
+                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center" style="background:none; border:none; padding:0; cursor:pointer;">
+                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--slate);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+            </form>
         </div>
     </div>
 

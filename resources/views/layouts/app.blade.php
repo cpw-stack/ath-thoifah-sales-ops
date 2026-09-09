@@ -175,7 +175,12 @@
                 <span class="notif-badge">{{ $pendingSchedules }}</span>
             @endif
         </a>
-        <a href="{{ route('admin.visit-plans.index') }}" class="navitem {{ request()->routeIs('admin.visit-plans.*') ? 'active' : '' }}"><span class="navicon">🗺️</span> Visit Planning</a>
+        <a href="{{ route('admin.visit-plans.index') }}" class="navitem {{ request()->routeIs('admin.visit-plans.*') ? 'active' : '' }}">
+            <span class="navicon">🗺️</span> Visit Planning
+            @if(isset($plannedVisitsToday) && $plannedVisitsToday > 0)
+                <span class="notif-badge">{{ $plannedVisitsToday }}</span>
+            @endif
+        </a>
         <a href="{{ route('salesman.visits.index') }}" class="navitem {{ request()->routeIs('salesman.visits.*') ? 'active' : '' }}"><span class="navicon">📍</span> Monitoring Kunjungan</a>
         <a href="{{ route('admin.orders.index') }}" class="navitem {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
             <span class="navicon">🧾</span> Order

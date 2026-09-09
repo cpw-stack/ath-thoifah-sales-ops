@@ -36,6 +36,11 @@ class Employee extends Model
         return $this->hasOne(Target::class); 
     }
 
+    public function targets()
+    {
+        return $this->hasMany(Target::class);
+    }
+
     // Relasi untuk Sales Order
     public function orders()
     {

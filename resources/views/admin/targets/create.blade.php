@@ -10,7 +10,9 @@
                 <div>
                     <label class="block text-xs mb-1" style="color:var(--slate);">Salesman</label>
                     <select name="employee_id" class="w-full" required>
-                        @foreach($employees as $emp)<option value="{{ $emp->id }}">{{ $emp->full_name }}</option>@endforeach
+                        @foreach($employees as $emp)
+                            <option value="{{ $emp->id }}" {{ old('employee_id', $selectedEmployee ?? '') == $emp->id ? 'selected' : '' }}>{{ $emp->full_name }} ({{ $emp->type }})</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>

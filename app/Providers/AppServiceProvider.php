@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\VisitScheduleRequest;
+use App\Models\VisitPlan;
 use App\Models\Order;
 use App\Models\Collection;
 use App\Models\Task;
@@ -31,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check() && !Auth::user()->hasRole('salesman')) {
                 
                 $pendingSchedules = VisitScheduleRequest::where('status', 'pending')->count();
+                
+                // Hitung jadwal visit yang berstatus planned untuk hari ini
+                $plannedVisitsToday = VisitPlan::whereDate('visit_date', today())
+                    ->where('status', 'planned')
+                    ->count();
+
                 $pendingOrders = Order::where('status', 'pending')->count();
                 $pendingCollections = Collection::where('status', 'pending')->count();
                 $pendingTasks = Task::where('status', 'pending')->count();
@@ -40,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
 
                 $view->with(compact(
                     'pendingSchedules', 
+                    'plannedVisitsToday',
                     'pendingOrders', 
                     'pendingCollections', 
                     'pendingTasks', 

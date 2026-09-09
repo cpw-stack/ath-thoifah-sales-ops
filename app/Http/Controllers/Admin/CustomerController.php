@@ -23,9 +23,18 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $customers = Customer::where('name', 'like', "%{$search}%")
-            ->orWhere('customer_code', 'like', "%{$search}%")
-            ->latest()->paginate(10);
+        
+        // Gunakan when() agar query hanya berjalan jika ada input search
+        $customers = Customer::when($search, function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('customer_code', 'like', "%{$search}%")
+                      ->orWhere('phone_number', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(10);
+
+        // Tambahkan appends agar query string tetap ada saat pindah halaman
+        $customers->appends($request->all());
 
         return view('admin.customers.index', compact('customers'));
     }

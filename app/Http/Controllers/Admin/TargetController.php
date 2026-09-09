@@ -11,14 +11,22 @@ class TargetController extends Controller
 {
     public function index()
     {
-        $targets = Target::with('employee')->latest()->paginate(10);
-        return view('admin.targets.index', compact('targets'));
+        // Ambil semua salesman, beserta target mereka untuk bulan ini
+        $employees = Employee::whereHas('user', fn($q) => $q->role('salesman'))
+            ->with(['targets' => function($query) {
+                $query->where('period_month', now()->format('Y-m'));
+            }])
+            ->get();
+
+        return view('admin.targets.index', compact('employees'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $employees = Employee::where('status', 'active')->get();
-        return view('admin.targets.create', compact('employees'));
+        $employees = Employee::whereHas('user', fn($q) => $q->role('salesman'))->get();
+        // Ambil employee_id dari URL (?employee_id=X) agar langsung terpilih di form
+        $selectedEmployee = $request->input('employee_id'); 
+        return view('admin.targets.create', compact('employees', 'selectedEmployee'));
     }
 
     public function store(Request $request)
@@ -32,6 +40,7 @@ class TargetController extends Controller
             'collection_target' => 'required|numeric|min:0',
         ]);
 
+        // Gunakan updateOrCreate agar tidak ada duplikat target untuk salesman & periode yang sama
         Target::updateOrCreate(
             ['employee_id' => $validated['employee_id'], 'period_month' => $validated['period_month']],
             $validated
@@ -42,7 +51,7 @@ class TargetController extends Controller
 
     public function edit(Target $target)
     {
-        $employees = Employee::where('status', 'active')->get();
+        $employees = Employee::whereHas('user', fn($q) => $q->role('salesman'))->get();
         return view('admin.targets.edit', compact('target', 'employees'));
     }
 
