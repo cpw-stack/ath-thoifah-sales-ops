@@ -107,6 +107,11 @@
 </head>
 <body>
 
+<!-- Indikator Offline -->
+<div id="offline-indicator" style="display:none; background:#dc2626; color:white; text-align:center; padding:5px; font-size:12px; position:sticky; top:0; z-index:100;">
+    Mode Offline: Data akan disimpan sementara di perangkat.
+</div>
+
 <div class="device">
   <div class="notch"></div>
 
@@ -165,6 +170,65 @@
   }
   updateClock();
   setInterval(updateClock, 30000);
+</script>
+
+<!-- Library untuk Offline Database -->
+<script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+
+<script>
+    // Setup LocalForage
+    window.localDB = localforage.createInstance({
+        name: 'ath_thoifah_offline'
+    });
+
+    // Deteksi Online/Offline
+    function updateOnlineStatus() {
+        const indicator = document.getElementById('offline-indicator');
+        if (!navigator.onLine) {
+            if (indicator) indicator.style.display = 'block';
+        } else {
+            if (indicator) indicator.style.display = 'none';
+            // Coba sync data yang pending
+            syncPendingData();
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener('load', updateOnlineStatus);
+
+    // Fungsi untuk sync data (akan diisi di langkah 3)
+    async function syncPendingData() {
+        const keys = await localDB.keys();
+        for (let key of keys) {
+            if (key.startsWith('draft_checkin_')) {
+                const data = await localDB.getItem(key);
+                try {
+                    // Kirim data ke server
+                    const formData = new FormData();
+                    formData.append('latitude', data.latitude);
+                    formData.append('longitude', data.longitude);
+                    // Karena photo disimpan sebagai Base64 di offline, kita convert balik ke Blob
+                    const blob = await (await fetch(data.photo)).blob();
+                    formData.append('photo', blob, 'checkin.jpg');
+
+                    const response = await fetch(data.url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    });
+
+                    if (response.ok) {
+                        await localDB.removeItem(key);
+                        alert('Data check-in yang tertunda berhasil dikirim!');
+                        window.location.reload(); // Reload untuk update UI
+                    }
+                } catch (err) {
+                    console.error('Sync failed', err);
+                }
+            }
+        }
+    }
 </script>
 </body>
 </html>

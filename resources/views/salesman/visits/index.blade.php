@@ -314,20 +314,19 @@
 @endif
 
 <script>
-    // === Script Mode Offline (Check-In) ===
     function openCheckInModal(planId) {
         document.getElementById('checkInForm').action = `/salesman/visits/${planId}/checkin`;
         document.getElementById('checkInModal').classList.remove('hidden');
         document.getElementById('checkInModal').classList.add('flex');
-
+        
         const gpsStatus = document.getElementById('gpsStatus');
         const submitBtn = document.querySelector('#checkInForm button[type="submit"]');
-
+        
         submitBtn.disabled = true;
         submitBtn.style.opacity = '0.5';
         gpsStatus.textContent = 'Mengambil lokasi GPS...';
         gpsStatus.style.color = 'var(--slate)';
-
+        
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 document.getElementById('latitude').value = position.coords.latitude;
@@ -340,9 +339,6 @@
                 gpsStatus.innerHTML = '❌ Gagal mengambil GPS. <button type="button" onclick="useDummyGPS()" style="color:var(--orange); font-weight:bold; text-decoration:underline;">Gunakan Koordinat Dummy</button>';
                 gpsStatus.style.color = 'var(--red)';
             });
-        } else {
-            gpsStatus.innerHTML = 'Browser tidak mendukung GPS. <button type="button" onclick="useDummyGPS()" style="color:var(--orange); font-weight:bold; text-decoration:underline;">Gunakan Koordinat Dummy</button>';
-            gpsStatus.style.color = 'var(--red)';
         }
     }
 
@@ -362,132 +358,45 @@
         document.getElementById('checkInModal').classList.remove('flex');
     }
 
-    // === Script Mode Online (Search-to-add cart) ===
-    @if($isOnlineSalesman ?? false)
-    const ALL_PRODUCTS = [
-        @foreach($products as $p)
-        { id: {{ $p->id }}, name: @json($p->name), price: {{ $p->price }} },
-        @endforeach
-    ];
+    // Intercept form submit untuk cek offline
+    document.getElementById('checkInForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Hentikan submit default
 
-    let cart = {};
+        const form = this;
+        const formData = new FormData(form);
+        const url = form.action;
 
-    function renderSearchResults(query) {
-        const box = document.getElementById('searchResults');
-        const q = (query || '').trim().toLowerCase();
+        // Cek apakah sedang offline
+        if (!navigator.onLine) {
+            const fileInput = document.querySelector('#checkInForm input[type="file"]');
+            const file = fileInput.files[0];
+            
+            // Convert file foto ke Base64 agar bisa disimpan di IndexedDB
+            const base64Photo = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
 
-        if (q.length === 0) {
-            box.classList.add('hidden');
-            box.innerHTML = '';
+            // Simpan ke Local Database
+            const draftId = 'draft_checkin_' + Date.now();
+            await localDB.setItem(draftId, {
+                url: url,
+                latitude: formData.get('latitude'),
+                longitude: formData.get('longitude'),
+                photo: base64Photo
+            });
+
+            alert('Mode Offline: Data check-in berhasil disimpan di perangkat. Sistem akan otomatis mengirimkannya saat koneksi internet kembali.');
+            closeCheckInModal();
+            
+            // Update UI menjadi "Pending Sync"
+            // (Anda bisa tambahkan logika untuk mengubah warna kartu menjadi kuning/oranye)
             return;
         }
 
-        const matches = ALL_PRODUCTS.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
-
-        if (matches.length === 0) {
-            box.innerHTML = `<div class="p-3 text-xs" style="color:var(--slate);">Produk tidak ditemukan.</div>`;
-            box.classList.remove('hidden');
-            return;
-        }
-
-        box.innerHTML = matches.map(p => `
-            <button type="button" onclick="addToCart(${p.id})"
-                    class="w-full text-left p-3 text-sm border-b flex justify-between items-center active:bg-gray-50"
-                    style="border-color:var(--border);">
-                <span class="font-semibold">${p.name}</span>
-                <span class="text-xs" style="color:var(--slate);">Rp ${p.price.toLocaleString('id-ID')}</span>
-            </button>
-        `).join('');
-        box.classList.remove('hidden');
-    }
-
-    function addToCart(productId) {
-        const product = ALL_PRODUCTS.find(p => p.id === productId);
-        if (!product) return;
-
-        if (cart[productId]) {
-            cart[productId].qty += 1;
-        } else {
-            cart[productId] = { id: product.id, name: product.name, price: product.price, qty: 1 };
-        }
-
-        document.getElementById('productSearchInput').value = '';
-        document.getElementById('searchResults').classList.add('hidden');
-
-        renderCart();
-    }
-
-    function changeQty(productId, delta) {
-        if (!cart[productId]) return;
-        cart[productId].qty += delta;
-        if (cart[productId].qty <= 0) {
-            delete cart[productId];
-        }
-        renderCart();
-    }
-
-    function removeFromCart(productId) {
-        delete cart[productId];
-        renderCart();
-    }
-
-    function renderCart() {
-        const listEl = document.getElementById('cartList');
-        const emptyEl = document.getElementById('cartEmpty');
-        const inputsEl = document.getElementById('cartInputs');
-        const submitBtn = document.getElementById('onlineSubmitBtn');
-        const items = Object.values(cart);
-
-        if (items.length === 0) {
-            listEl.classList.add('hidden');
-            emptyEl.classList.remove('hidden');
-            inputsEl.innerHTML = '';
-            submitBtn.disabled = true;
-            document.getElementById('onlineTotal').textContent = 'Rp 0';
-            return;
-        }
-
-        emptyEl.classList.add('hidden');
-        listEl.classList.remove('hidden');
-        submitBtn.disabled = false;
-
-        let total = 0;
-        listEl.innerHTML = items.map(item => {
-            const subtotal = item.qty * item.price;
-            total += subtotal;
-            return `
-                <div class="border-b pb-3" style="border-color:var(--border);">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="font-semibold text-sm" style="color:var(--ink);">${item.name}</div>
-                        <button type="button" onclick="removeFromCart(${item.id})" class="text-xs font-bold" style="color:var(--red);">Hapus</button>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="changeQty(${item.id}, -1)" class="w-9 h-9 rounded-lg border font-bold text-lg" style="border-color:var(--border); background:var(--paper-dim);">−</button>
-                            <span class="w-8 text-center font-bold text-sm">${item.qty}</span>
-                            <button type="button" onclick="changeQty(${item.id}, 1)" class="w-9 h-9 rounded-lg border font-bold text-lg" style="border-color:var(--border); background:var(--paper-dim);">+</button>
-                        </div>
-                        <span class="font-bold text-sm" style="color:var(--orange);">Rp ${subtotal.toLocaleString('id-ID')}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        document.getElementById('onlineTotal').textContent = 'Rp ' + total.toLocaleString('id-ID');
-
-        inputsEl.innerHTML = items.map(item => `
-            <input type="hidden" name="items[${item.id}][id]" value="${item.id}">
-            <input type="hidden" name="items[${item.id}][qty]" value="${item.qty}">
-        `).join('');
-    }
-
-    document.addEventListener('click', function(e) {
-        const box = document.getElementById('searchResults');
-        const input = document.getElementById('productSearchInput');
-        if (box && input && !box.contains(e.target) && e.target !== input) {
-            box.classList.add('hidden');
-        }
+        // Jika online, submit seperti biasa
+        form.submit();
     });
-    @endif
 </script>
 @endsection
