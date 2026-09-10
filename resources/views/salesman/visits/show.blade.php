@@ -558,5 +558,69 @@
         checkInModal.classList.add('hidden');
         checkInModal.classList.remove('flex');
     }
+
+    // Intercept Form Order
+    document.getElementById('orderForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        const url = form.action;
+
+        if (!navigator.onLine) {
+            const fields = {};
+            formData.forEach((value, key) => {
+                if (key !== '_token') fields[key] = value;
+            });
+
+            await localDB.setItem('draft_order_' + Date.now(), {
+                url: url,
+                fields: fields
+            });
+
+            alert('Mode Offline: Data Order berhasil disimpan di perangkat.');
+            form.reset();
+            switchStep(2); // Kembali ke langkah sebelumnya atau tampilan awal
+            return;
+        }
+        form.submit();
+    });
+
+    // Intercept Form Collection (Tagih Piutang)
+    document.querySelectorAll('form[action*="/collection"]').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const url = this.action;
+
+            if (!navigator.onLine) {
+                const fields = {};
+                formData.forEach((value, key) => {
+                    if (key !== 'payment_proof') fields[key] = value;
+                });
+
+                // Handle file bukti transfer
+                let base64File = null;
+                const fileInput = this.querySelector('input[type="file"]');
+                if (fileInput && fileInput.files[0]) {
+                    base64File = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(fileInput.files[0]);
+                    });
+                }
+
+                await localDB.setItem('draft_collection_' + Date.now(), {
+                    url: url,
+                    fields: fields,
+                    fileBase64: base64File,
+                    fileKey: 'payment_proof'
+                });
+
+                alert('Mode Offline: Data Penagihan berhasil disimpan di perangkat.');
+                return;
+            }
+            this.submit();
+        });
+    });
 </script>
 @endsection

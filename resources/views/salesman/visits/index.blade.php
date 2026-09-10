@@ -358,7 +358,7 @@
         document.getElementById('checkInModal').classList.remove('flex');
     }
 
-    // Intercept form submit untuk cek offline
+    // Intercept form submit untuk cek offline (Check-in)
     document.getElementById('checkInForm').addEventListener('submit', async function(e) {
         e.preventDefault(); // Hentikan submit default
 
@@ -371,31 +371,63 @@
             const fileInput = document.querySelector('#checkInForm input[type="file"]');
             const file = fileInput.files[0];
             
-            // Convert file foto ke Base64 agar bisa disimpan di IndexedDB
+            // Convert file foto ke Base64
             const base64Photo = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
                 reader.readAsDataURL(file);
             });
 
-            // Simpan ke Local Database
+            // Kumpulkan field biasa
+            const fields = {};
+            formData.forEach((value, key) => {
+                if (key !== 'photo') fields[key] = value;
+            });
+
+            // Simpan ke Local Database dengan struktur generic
             const draftId = 'draft_checkin_' + Date.now();
             await localDB.setItem(draftId, {
                 url: url,
-                latitude: formData.get('latitude'),
-                longitude: formData.get('longitude'),
-                photo: base64Photo
+                fields: fields,
+                fileBase64: base64Photo,
+                fileKey: 'photo'
             });
 
-            alert('Mode Offline: Data check-in berhasil disimpan di perangkat. Sistem akan otomatis mengirimkannya saat koneksi internet kembali.');
+            alert('Mode Offline: Data check-in berhasil disimpan di perangkat.');
             closeCheckInModal();
-            
-            // Update UI menjadi "Pending Sync"
-            // (Anda bisa tambahkan logika untuk mengubah warna kartu menjadi kuning/oranye)
             return;
         }
 
         // Jika online, submit seperti biasa
+        form.submit();
+    });
+
+    // Intercept Form Laporan Online
+    document.getElementById('onlineForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        const url = form.action;
+
+        if (!navigator.onLine) {
+            const fields = {};
+            formData.forEach((value, key) => {
+                if (key !== '_token') fields[key] = value;
+            });
+
+            await localDB.setItem('draft_onlinereport_' + Date.now(), {
+                url: url,
+                fields: fields
+            });
+
+            alert('Mode Offline: Laporan Online berhasil disimpan di perangkat.');
+            form.reset();
+            document.getElementById('cartList').innerHTML = '';
+            document.getElementById('cartEmpty').classList.remove('hidden');
+            document.getElementById('cartList').classList.add('hidden');
+            document.getElementById('onlineTotal').textContent = 'Rp 0';
+            return;
+        }
         form.submit();
     });
 </script>

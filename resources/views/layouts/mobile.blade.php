@@ -197,36 +197,49 @@
     window.addEventListener('offline', updateOnlineStatus);
     window.addEventListener('load', updateOnlineStatus);
 
-    // Fungsi untuk sync data (akan diisi di langkah 3)
+    // Fungsi generic untuk sync semua data tertunda
     async function syncPendingData() {
         const keys = await localDB.keys();
+        let hasSynced = false;
+
         for (let key of keys) {
-            if (key.startsWith('draft_checkin_')) {
-                const data = await localDB.getItem(key);
-                try {
-                    // Kirim data ke server
-                    const formData = new FormData();
-                    formData.append('latitude', data.latitude);
-                    formData.append('longitude', data.longitude);
-                    // Karena photo disimpan sebagai Base64 di offline, kita convert balik ke Blob
-                    const blob = await (await fetch(data.photo)).blob();
-                    formData.append('photo', blob, 'checkin.jpg');
+            if (!key.startsWith('draft_')) continue;
 
-                    const response = await fetch(data.url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
-                    });
+            const data = await localDB.getItem(key);
+            const formData = new FormData();
 
-                    if (response.ok) {
-                        await localDB.removeItem(key);
-                        alert('Data check-in yang tertunda berhasil dikirim!');
-                        window.location.reload(); // Reload untuk update UI
-                    }
-                } catch (err) {
-                    console.error('Sync failed', err);
-                }
+            // Masukkan semua field teks biasa
+            for (const field in data.fields) {
+                formData.append(field, data.fields[field]);
             }
+
+            // Jika ada file (foto/bukti), convert Base64 ke Blob
+            if (data.fileBase64) {
+                const blob = await (await fetch(data.fileBase64)).blob();
+                formData.append(data.fileKey, blob, 'file.jpg');
+            }
+
+            try {
+                const response = await fetch(data.url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                });
+
+                if (response.ok) {
+                    // Jika berhasil kirim, hapus dari draft
+                    await localDB.removeItem(key);
+                    hasSynced = true;
+                }
+            } catch (err) {
+                console.error('Sync failed for ' + key, err);
+            }
+        }
+
+        // Jika ada data yang berhasil dikirim, reload halaman
+        if (hasSynced) {
+            alert('Data yang tertunda berhasil dikirim ke server!');
+            window.location.reload();
         }
     }
 </script>
