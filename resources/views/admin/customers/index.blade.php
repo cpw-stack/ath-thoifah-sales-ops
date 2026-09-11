@@ -12,7 +12,7 @@
     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <div>
             <h2 class="display text-2xl">Mitra Management</h2>
-            <p class="text-sm" style="color:var(--slate);">Kelola data toko dan limit kredit.</p>
+            <p class="text-sm" style="color:var(--slate);">Kelola data toko, limit kredit, dan diskon.</p>
         </div>
         <a href="{{ route('admin.customers.create') }}" class="btn w-full sm:w-auto text-center">+ Tambah Mitra</a>
     </div>
@@ -75,7 +75,6 @@
 
     <!-- Tombol Bulk Delete (Akan muncul jika ada yang dicentang) -->
     <div class="mb-4 flex justify-end">
-        <!-- Tombol ini menggunakan @click Alpine.js untuk membuka modal bulk delete -->
         <button type="button" id="bulkDeleteBtn" class="btn text-xs hidden" style="background:var(--red);" @click="bulkForceDelete = false; bulkModal = true">
             🗑️ Hapus Mitra Terpilih (<span id="selectedCount">0</span>)
         </button>
@@ -83,50 +82,84 @@
 
     <!-- 1. TAMPILAN DESKTOP (Tabel) - Hanya muncul di layar besar -->
     <div class="card overflow-hidden hidden md:block">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[900px]">
-                <thead>
-                    <tr class="bg-gray-50 border-b" style="border-color:var(--border);">
-                        <th class="p-4 w-10"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                        <th class="p-4">Kode</th>
-                        <th class="p-4">Nama Toko</th>
-                        <th class="p-4">Pemilik</th>
-                        <th class="p-4">Telepon</th>
-                        <th class="p-4">Limit Kredit</th>
-                        <th class="p-4">Status</th>
-                        <th class="p-4 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($customers as $customer)
-                    <tr class="border-b" style="border-color:var(--border);">
-                        <td class="p-4"><input type="checkbox" name="ids[]" value="{{ $customer->id }}" class="mitra-checkbox"></td>
-                        <td class="p-4 mono text-xs">{{ $customer->customer_code }}</td>
-                        <td class="p-4 font-semibold text-sm">{{ $customer->name }}</td>
-                        <td class="p-4 text-sm">{{ $customer->owner_name ?? '-' }}</td>
-                        <td class="p-4 text-sm">{{ $customer->phone_number ?? '-' }}</td>
-                        <td class="p-4 mono text-sm">Rp {{ number_format($customer->credit_limit, 0, ',', '.') }}</td>
-                        <td class="p-4">
-                            @if($customer->status == 'active')
-                                <span class="badge badge-green">Active</span>
-                            @else
-                                <span class="badge badge-slate">Inactive</span>
+        <!-- Hapus table-fixed, biarkan browser mengatur lebar kolom secara proporsional (auto) -->
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b" style="border-color:var(--border);">
+                    <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider whitespace-nowrap">Kode</th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider">Toko & Pemilik</th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider whitespace-nowrap">Telepon</th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider text-right whitespace-nowrap">Limit Kredit</th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider text-center whitespace-nowrap">Diskon</th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider text-center whitespace-nowrap">Status</th>
+                    <th class="p-3 text-xs font-bold uppercase tracking-wider text-right whitespace-nowrap">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($customers as $customer)
+                <tr class="border-b hover:bg-gray-50 transition-colors" style="border-color:var(--border);">
+                    <td class="p-3 text-center align-top"><input type="checkbox" name="ids[]" value="{{ $customer->id }}" class="mitra-checkbox"></td>
+                    <td class="p-3 mono text-xs align-top whitespace-nowrap">{{ $customer->customer_code }}</td>
+                    
+                    <!-- Gabungan Nama Toko, Pemilik & Alamat -->
+                    <td class="p-3 align-top max-w-sm"> <!-- max-w-sm agar alamat sangat panjang tidak membengkakkan tabel -->
+                        <div class="flex items-center gap-1">
+                            <span class="font-semibold text-sm">{{ $customer->name }}</span>
+                            <span class="text-xs mt-0.5" style="color:var(--slate);"> | Owner: <b>{{ $customer->owner_name ?? '-' }}</b></span>
+                            @if($customer->updated_at && $customer->updated_at->gt(now()->subHours(24)))
+                                <span class="inline-block w-2 h-2 rounded-full flex-shrink-0" style="background:var(--green);" title="Baru saja diupdate"></span>
                             @endif
-                        </td>
-                        <td class="p-4 text-right whitespace-nowrap">
-                            <a href="{{ route('admin.customers.show', $customer) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Detail</a>
-                            <a href="{{ route('admin.customers.edit', $customer) }}" class="btn-outline text-xs mr-2" style="padding:6px 10px;">Edit</a>
-                            <button type="button" @click="deleteId = {{ $customer->id }}; deleteName = '{{ addslashes($customer->name) }}'; forceDelete = false; deleteModal = true" class="text-red-600 text-xs font-bold">
-                                Hapus
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="8" class="p-8 text-center" style="color:var(--slate);">Mitra tidak ditemukan.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                        
+                        @if($customer->address)
+                        <div class="text-xs mt-1 flex items-start gap-1" style="color:var(--slate);">
+                            <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span class="break-words">{{ $customer->address }}</span>
+                        </div>
+                        @endif
+                    </td>
+
+                    <td class="p-3 text-sm align-top whitespace-nowrap">{{ $customer->phone_number ?? '-' }}</td>
+                    <td class="p-3 mono text-sm text-right whitespace-nowrap align-top">Rp {{ number_format($customer->credit_limit ?? 0, 0, ',', '.') }}</td>
+                    
+                    <!-- Kolom Diskon + Icon Status -->
+                    <td class="p-3 text-center whitespace-nowrap align-top">
+                        @if($customer->discount && $customer->discount > 0)
+                            <span class="mono text-sm font-bold" style="color:var(--ink);">{{ number_format($customer->discount, 0, ',', '.') }}%</span>
+                        @else
+                            <span class="text-sm" style="color:var(--slate);">0%</span>
+                        @endif
+
+                        @if($customer->discount_status == 'active')
+                            <span class="inline-block w-2 h-2 rounded-full ml-1 align-middle" style="background:var(--green);" title="Diskon Aktif"></span>
+                        @elseif($customer->discount_status == 'submitted')
+                            <span class="inline-block w-2 h-2 rounded-full ml-1 align-middle" style="background:#FCD34D;" title="Diajukan (Menunggu Persetujuan)"></span>
+                        @else
+                            <span class="inline-block w-2 h-2 rounded-full ml-1 align-middle" style="background:var(--slate);" title="Diskon Nonaktif"></span>
+                        @endif
+                    </td>
+
+                    <td class="p-3 text-center align-top whitespace-nowrap">
+                        @if($customer->status == 'active')
+                            <span class="badge badge-green">Active</span>
+                        @else
+                            <span class="badge badge-slate">Inactive</span>
+                        @endif
+                    </td>
+                    <td class="p-3 text-right whitespace-nowrap align-top">
+                        <a href="{{ route('admin.customers.show', $customer) }}" class="btn-outline text-xs mr-1" style="padding:4px 8px;">Detail</a>
+                        <a href="{{ route('admin.customers.edit', $customer) }}" class="btn-outline text-xs mr-1" style="padding:4px 8px;">Edit</a>
+                        <button type="button" @click="deleteId = {{ $customer->id }}; deleteName = '{{ addslashes($customer->name) }}'; forceDelete = false; deleteModal = true" class="text-red-600 text-xs font-bold">
+                            Hapus
+                        </button>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="8" class="p-8 text-center" style="color:var(--slate);">Mitra tidak ditemukan.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
         <div class="p-4 border-t" style="border-color:var(--border);">
             {{ $customers->appends(['search' => request('search')])->links() }}
         </div>
@@ -140,8 +173,19 @@
                 <div class="flex items-center gap-3">
                     <input type="checkbox" name="ids[]" value="{{ $customer->id }}" class="mitra-checkbox mt-1">
                     <div>
-                        <div class="font-semibold text-base" style="color:var(--ink);">{{ $customer->name }}</div>
-                        <div class="text-xs mono" style="color:var(--slate);">Kode: {{ $customer->customer_code }}</div>
+                        <div class="font-semibold text-base" style="color:var(--ink);">
+                            {{ $customer->name }}
+                            @if($customer->updated_at && $customer->updated_at->gt(now()->subHours(24)))
+                                <span class="inline-block ml-1 w-2 h-2 rounded-full" style="background:var(--green);" title="Baru saja diupdate"></span>
+                            @endif
+                        </div>
+                        <div class="text-xs" style="color:var(--slate);">Owner: <b>{{ $customer->owner_name ?? '-' }}</b></div>
+                        @if($customer->address)
+                        <div class="text-xs mt-1 flex items-start gap-1" style="color:var(--slate);">
+                            <svg class="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span>{{ $customer->address }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @if($customer->status == 'active')
@@ -153,8 +197,8 @@
             
             <div class="text-xs space-y-2 mb-4 border-t pt-3" style="border-color:var(--border);">
                 <div class="flex justify-between">
-                    <span style="color:var(--slate);">Pemilik:</span>
-                    <span class="font-semibold text-right">{{ $customer->owner_name ?? '-' }}</span>
+                    <span style="color:var(--slate);">Kode:</span>
+                    <span class="font-semibold text-right mono">{{ $customer->customer_code }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span style="color:var(--slate);">Telepon:</span>
@@ -162,7 +206,24 @@
                 </div>
                 <div class="flex justify-between">
                     <span style="color:var(--slate);">Limit Kredit:</span>
-                    <span class="font-semibold text-right mono">Rp {{ number_format($customer->credit_limit, 0, ',', '.') }}</span>
+                    <span class="font-semibold text-right mono">Rp {{ number_format($customer->credit_limit ?? 0, 0, ',', '.') }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span style="color:var(--slate);">Diskon:</span>
+                    <span class="font-semibold text-right mono flex items-center gap-1">
+                        @if($customer->discount && $customer->discount > 0)
+                            {{ number_format($customer->discount, 0, ',', '.') }}%
+                        @else
+                            <span style="color:var(--slate);">0%</span>
+                        @endif
+                        @if($customer->discount_status == 'active')
+                            <span class="inline-block w-2 h-2 rounded-full" style="background:var(--green);" title="Diskon Aktif"></span>
+                        @elseif($customer->discount_status == 'submitted')
+                            <span class="inline-block w-2 h-2 rounded-full" style="background:#FCD34D;" title="Diajukan"></span>
+                        @else
+                            <span class="inline-block w-2 h-2 rounded-full" style="background:var(--slate);" title="Nonaktif"></span>
+                        @endif
+                    </span>
                 </div>
             </div>
 
@@ -267,7 +328,6 @@
             }
         }
 
-        // Fungsi ini dipanggil saat tombol "Hapus Sekarang" di modal bulk delete diklik
         function submitBulkDelete(isForceDelete) {
             let checkedIds = [];
             document.querySelectorAll('.mitra-checkbox:checked').forEach(cb => {
@@ -295,7 +355,6 @@
             methodField.value = 'DELETE';
             form.appendChild(methodField);
 
-            // Sertakan input force_delete_relations dari parameter isForceDelete
             let forceInput = document.createElement('input');
             forceInput.type = 'hidden';
             forceInput.name = 'force_delete_relations';
@@ -315,5 +374,5 @@
         }
     </script>
 
-</div> <!-- Penutup div x-data -->
+</div>
 @endsection

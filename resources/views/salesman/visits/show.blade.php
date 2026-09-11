@@ -221,7 +221,7 @@
         <!-- Panel 3: Buat Order -->
         <section id="panel-3" class="step-panel {{ $currentStep === 3 ? 'is-visible' : '' }}">
             <div class="panel-heading">
-                <span class="panel-title">Buat Order</span>
+                <span class="panel-title">Form Pemesanan (DP)</span>
                 @if($visit->order) <span class="panel-status-pill done">Rp {{ number_format($visit->order->total_amount, 0, ',', '.') }}</span> @else <span class="panel-status-pill pending">Belum ada order</span> @endif
             </div>
             @if($visit->order)
@@ -269,23 +269,26 @@
 
                 <form action="{{ route('salesman.visits.order', $visit) }}" method="POST" id="orderForm">
                     @csrf
-                    <!-- Pilihan Tipe Pembelian -->
-                    <div class="mb-4">
-                        <label class="text-xs font-bold uppercase block mb-2" style="color:var(--slate);">Tipe Pembelian</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment_type" value="cash" class="hidden peer" checked required>
-                                <div class="p-3 text-center rounded-lg border text-sm font-semibold peer-checked:bg-[#1B2A41] peer-checked:text-white transition" style="border-color:var(--border);">Cash</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment_type" value="konsinyasi" class="hidden peer">
-                                <div class="p-3 text-center rounded-lg border text-sm font-semibold peer-checked:bg-[#1B2A41] peer-checked:text-white transition" style="border-color:var(--border);">Konsinyasi</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment_type" value="piutang" class="hidden peer">
-                                <div class="p-3 text-center rounded-lg border text-sm font-semibold peer-checked:bg-[#1B2A41] peer-checked:text-white transition" style="border-color:var(--border);">Piutang</div>
-                            </label>
+                    <!-- Header Form DP -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1" style="color:var(--slate);">Tanggal Kirim</label>
+                            <input type="date" name="delivery_date" value="{{ old('delivery_date', date('Y-m-d')) }}" class="w-full p-2 text-sm rounded-lg border" style="border-color:var(--border);" required>
                         </div>
+                        <!-- Pilihan Tipe Pembelian -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase mb-1" style="color:var(--slate);">Tipe Bayar</label>
+                            <select name="payment_type" class="w-full p-2 text-sm rounded-lg border" style="border-color:var(--border);" required>
+                                <option value="cash">Cash / Tunai</option>
+                                <option value="konsinyasi">Konsinyasi</option>
+                                <option value="piutang">Piutang</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold uppercase mb-1" style="color:var(--slate);">Keterangan Order</label>
+                        <textarea name="notes" rows="2" class="w-full p-2 text-sm rounded-lg border" style="border-color:var(--border);" placeholder="Misal: Kirim jam 3 sore, titip di gudang depan..."></textarea>
                     </div>
 
                     <div class="product-search">
@@ -330,7 +333,7 @@
                             <span class="font-bold text-base" id="orderTotal" style="color:var(--orange);">Rp 0</span>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary btn-primary-block">Simpan Order</button>
+                    <button type="submit" class="btn-primary btn-primary-block">Simpan Form DP</button>
                 </form>
             @endif
         </section>

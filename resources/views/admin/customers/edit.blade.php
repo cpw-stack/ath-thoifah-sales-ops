@@ -9,29 +9,34 @@
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <form action="{{ route('admin.customers.update', $customer) }}" method="POST">
             @csrf @method('PUT')
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm text-gray-700">Kode Toko</label>
-                    <input type="text" name="customer_code" value="{{ $customer->customer_code }}" class="w-full border rounded p-2 mt-1" required>
+                    <input type="text" name="customer_code" value="{{ old('customer_code', $customer->customer_code) }}" class="w-full border rounded p-2 mt-1" required>
+                    @error('customer_code') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">Nama Toko</label>
-                    <input type="text" name="name" value="{{ $customer->name }}" class="w-full border rounded p-2 mt-1" required>
+                    <input type="text" name="name" value="{{ old('name', $customer->name) }}" class="w-full border rounded p-2 mt-1" required>
+                    @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm text-gray-700">Nama Pemilik</label>
-                    <input type="text" name="owner_name" value="{{ $customer->owner_name }}" class="w-full border rounded p-2 mt-1">
+                    <input type="text" name="owner_name" value="{{ old('owner_name', $customer->owner_name) }}" class="w-full border rounded p-2 mt-1">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">No Telepon</label>
-                    <input type="text" name="phone_number" value="{{ $customer->phone_number }}" class="w-full border rounded p-2 mt-1">
+                    <input type="text" name="phone_number" value="{{ old('phone_number', $customer->phone_number) }}" class="w-full border rounded p-2 mt-1">
                 </div>
             </div>
+
             <div class="mb-4">
                 <label class="block text-sm text-gray-700">Alamat</label>
-                <textarea name="address" rows="2" class="w-full border rounded p-2 mt-1">{{ $customer->address }}</textarea>
+                <textarea name="address" rows="2" class="w-full border rounded p-2 mt-1">{{ old('address', $customer->address) }}</textarea>
             </div>
 
             <!-- INPUT URL GOOGLE MAPS -->
@@ -44,11 +49,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm text-gray-700">Latitude (GPS)</label>
-                    <input type="text" name="latitude" id="latitude" value="{{ $customer->latitude }}" class="w-full border rounded p-2 mt-1" readonly>
+                    <input type="text" name="latitude" id="latitude" value="{{ old('latitude', $customer->latitude) }}" class="w-full border rounded p-2 mt-1" readonly>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">Longitude (GPS)</label>
-                    <input type="text" name="longitude" id="longitude" value="{{ $customer->longitude }}" class="w-full border rounded p-2 mt-1" readonly>
+                    <input type="text" name="longitude" id="longitude" value="{{ old('longitude', $customer->longitude) }}" class="w-full border rounded p-2 mt-1" readonly>
                 </div>
             </div>
 
@@ -70,23 +75,44 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-sm text-gray-700">Limit Kredit (Rp)</label>
-                    <input type="number" name="credit_limit" value="{{ $customer->credit_limit }}" class="w-full border rounded p-2 mt-1" required>
+                    <input type="number" name="credit_limit" value="{{ old('credit_limit', $customer->credit_limit) }}" class="w-full border rounded p-2 mt-1" min="0" step="any" placeholder="Contoh: 5000000" required>
+                    @error('credit_limit') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="block text-sm text-gray-700">Term Pembayaran (Hari)</label>
-                    <input type="number" name="credit_terms_days" value="{{ $customer->credit_terms_days }}" class="w-full border rounded p-2 mt-1" required>
+                    <input type="number" name="credit_terms_days" value="{{ old('credit_terms_days', $customer->credit_terms_days) }}" class="w-full border rounded p-2 mt-1" min="0" step="1" placeholder="Contoh: 30" required>
+                    @error('credit_terms_days') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-700">Status</label>
+                    <label class="block text-sm text-gray-700">Status Toko</label>
                     <select name="status" class="w-full border rounded p-2 mt-1">
-                        <option value="active" {{ $customer->status == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ $customer->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        <option value="active" {{ old('status', $customer->status) == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="inactive" {{ old('status', $customer->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
             </div>
-            <div class="flex justify-end">
-                <a href="{{ route('admin.customers.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2">Batal</a>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Update</button>
+
+            <!-- TAMBAHAN: INPUT DISKON & STATUS DISKON -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm text-gray-700">Diskon (%)</label>
+                    <input type="number" name="discount" value="{{ old('discount', $customer->discount ?? 0) }}" class="w-full border rounded p-2 mt-1" min="0" max="100" step="0.01" placeholder="Contoh: 5">
+                    @error('discount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700">Status Diskon</label>
+                    <select name="discount_status" class="w-full border rounded p-2 mt-1">
+                        <option value="inactive" {{ old('discount_status', $customer->discount_status) == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+                        <option value="submitted" {{ old('discount_status', $customer->discount_status) == 'submitted' ? 'selected' : '' }}>Diajukan</option>
+                        <option value="active" {{ old('discount_status', $customer->discount_status) == 'active' ? 'selected' : '' }}>Aktif (Disetujui)</option>
+                    </select>
+                    @error('discount_status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div class="flex justify-end border-t pt-4 mt-4">
+                <a href="{{ route('admin.customers.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-300">Batal</a>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update Data</button>
             </div>
         </form>
     </div>

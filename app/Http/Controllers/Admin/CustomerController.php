@@ -22,19 +22,16 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        
-        // Gunakan when() agar query hanya berjalan jika ada input search
-        $customers = Customer::when($search, function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('customer_code', 'like', "%{$search}%")
-                      ->orWhere('phone_number', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate(10);
+        $search = $request->get('search');
 
-        // Tambahkan appends agar query string tetap ada saat pindah halaman
-        $customers->appends($request->all());
+        $customers = Customer::when($search, function ($query) use ($search) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('customer_code', 'like', "%{$search}%")
+                ->orWhere('owner_name', 'like', "%{$search}%");
+        })
+        ->orderBy('updated_at', 'desc')   // 1. Paling terupdate dahulu
+        ->orderBy('name', 'asc')           // 2. Lanjut alfabet
+        ->paginate(10);
 
         return view('admin.customers.index', compact('customers'));
     }
@@ -57,6 +54,9 @@ class CustomerController extends Controller
             'credit_limit' => 'required|integer|min:0',
             'credit_terms_days' => 'required|integer|min:0',
             'status' => 'required|in:active,inactive',
+            // Tambahan validasi diskon
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'discount_status' => 'required|in:active,inactive,submitted',
         ]);
 
         Customer::create($validated);
@@ -79,9 +79,11 @@ class CustomerController extends Controller
             'address' => 'nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'credit_limit' => 'required|integer|min:0',
-            'credit_terms_days' => 'required|integer|min:0',
+            'credit_limit' => 'required|numeric|min:0',      // <-- UBAH DARI integer MENJADI numeric
+            'credit_terms_days' => 'required|integer|min:0', // Ini boleh tetap integer (hari)
             'status' => 'required|in:active,inactive',
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'discount_status' => 'required|in:active,inactive,submitted',
         ]);
 
         $customer->update($validated);
@@ -204,12 +206,24 @@ class CustomerController extends Controller
             'is_active' => true,
         ]);
 
+        // Sinkronisasi ke tabel customers agar tabel index langsung update
+        $customer->update([
+            'discount' => $discount->discount_value,
+            'discount_status' => 'active'
+        ]);
+
         return back()->with('success', 'Diskon untuk mitra ' . $customer->name . ' telah disetujui.');
     }
 
     public function rejectDiscount(Customer $customer, CustomerStockDiscount $discount)
     {
         $discount->update(['is_active' => false]);
+
+        // Sinkronisasi ke tabel customers (kembalikan ke nonaktif)
+        $customer->update([
+            'discount_status' => 'inactive'
+        ]);
+
         return back()->with('error', 'Pengajuan diskon telah ditolak.');
     }
 
@@ -232,12 +246,25 @@ class CustomerController extends Controller
             ]
         );
 
+        // Sinkronisasi ke tabel customers
+        $customer->update([
+            'discount' => $validated['discount_value'],
+            'discount_status' => 'active'
+        ]);
+
         return back()->with('success', 'Diskon untuk mitra ' . $customer->name . ' berhasil disimpan & disetujui.');
     }
 
     public function destroyDiscount(Customer $customer, CustomerStockDiscount $discount)
     {
         $discount->delete();
+
+        // Sinkronisasi ke tabel customers (reset ke 0 dan inactive)
+        $customer->update([
+            'discount' => 0,
+            'discount_status' => 'inactive'
+        ]);
+
         return back()->with('success', 'Diskon untuk mitra ' . $customer->name . ' berhasil dihapus permanen.');
     }
 

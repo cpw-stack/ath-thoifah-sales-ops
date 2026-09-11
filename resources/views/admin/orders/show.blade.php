@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="display text-2xl">Detail Order</h2>
+            <h2 class="display text-2xl">Detail Order (DP)</h2>
             <p class="mono text-sm" style="color:var(--slate);">{{ $order->order_code }}</p>
         </div>
         <div class="flex gap-2">
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Info Dasar Order -->
-    <div class="card mb-6 p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="card mb-6 p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Toko Mitra</div>
             <div class="font-semibold mt-1">{{ $order->customer->name }}</div>
@@ -25,6 +25,14 @@
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Salesman</div>
             <div class="font-semibold mt-1">{{ $order->employee->full_name }}</div>
+        </div>
+        <div>
+            <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Tanggal Order</div>
+            <div class="font-semibold mt-1">{{ $order->created_at->format('d M Y') }}</div>
+        </div>
+        <div>
+            <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Tanggal Kirim</div>
+            <div class="font-semibold mt-1">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d M Y') }}</div>
         </div>
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Tipe Pembayaran</div>
@@ -48,6 +56,12 @@
                 <button type="submit" class="btn text-xs">Update</button>
             </form>
         </div>
+        @if($order->notes)
+        <div class="md:col-span-2">
+            <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Keterangan</div>
+            <div class="mt-1 p-3 rounded-lg" style="background:var(--paper-dim);">{{ $order->notes }}</div>
+        </div>
+        @endif
     </div>
 
     <div class="card overflow-x-auto">

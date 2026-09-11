@@ -300,12 +300,15 @@ class VisitController extends Controller
             'items.*.id' => 'required|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
             'payment_type' => 'required|in:cash,konsinyasi,piutang',
+            'delivery_date' => 'nullable|date',
+            'notes' => 'nullable|string'
         ]);
 
         $totalAmount = 0;
         $orderItems = [];
         $insufficientStock = [];
 
+        // 1. Cek stok gudang pusat (jika diperlukan, sesuaikan dengan logic stok keluar)
         foreach ($request->items as $item) {
             $product = Product::find($item['id']);
             if ($product->stock < $item['qty']) {
@@ -317,6 +320,7 @@ class VisitController extends Controller
             return back()->with('error', 'Gagal membuat order. Stok gudang pusat tidak mencukupi untuk: ' . implode(', ', $insufficientStock))->withInput();
         }
 
+        // 2. Kurangi stok dan hitung total
         foreach ($request->items as $item) {
             $product = Product::find($item['id']);
             $product->decrement('stock', $item['qty']);
@@ -332,6 +336,7 @@ class VisitController extends Controller
             ]);
         }
 
+        // 3. Hitung diskon jika ada yang approved
         $discount = CustomerStockDiscount::where('customer_id', $visit->customer_id)
             ->where('is_active', true)
             ->where('is_approved', true)
@@ -343,6 +348,7 @@ class VisitController extends Controller
         }
         $finalAmount = $totalAmount - $discountAmount;
 
+        // 4. Simpan Order dengan field DP baru
         $order = Order::create([
             'order_code' => 'ORD-' . date('ymd') . '-' . Str::random(4),
             'visit_id' => $visit->id,
@@ -350,6 +356,8 @@ class VisitController extends Controller
             'employee_id' => $visit->employee_id,
             'total_amount' => $finalAmount,
             'payment_type' => $request->payment_type,
+            'delivery_date' => $request->delivery_date,
+            'notes' => $request->notes,
             'status' => 'pending'
         ]);
 

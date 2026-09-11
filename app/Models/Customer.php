@@ -22,6 +22,8 @@ class Customer extends Model
         'credit_limit',
         'credit_terms_days',
         'status',
+        'discount',
+        'discount_status',
     ];
 
     public function receivables()
