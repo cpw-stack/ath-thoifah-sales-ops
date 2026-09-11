@@ -352,7 +352,7 @@
                 @if($tasks->count() > 0)
                     <div class="mb-4 p-3 rounded-xl border-2 border-dashed" style="border-color:var(--border); background:var(--paper-dim);">
                         <div class="text-sm font-bold mb-2 flex items-center gap-1" style="color:var(--ink);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
                             Dokumen Invoice Penagihan
                         </div>
                         <div class="space-y-2">
@@ -563,10 +563,32 @@
     document.getElementById('orderForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const form = this;
-        const formData = new FormData(form);
         const url = form.action;
+        let hasItems = false;
+
+        // Cek dan disable input dengan qty 0 atau kosong agar tidak dikirim ke server
+        document.querySelectorAll('#order-list .product-item').forEach(itemDiv => {
+            const qtyInput = itemDiv.querySelector('input[type="number"]');
+            const idInput = itemDiv.querySelector('input[type="hidden"]');
+            if (qtyInput && idInput) {
+                if (parseInt(qtyInput.value) > 0) {
+                    hasItems = true;
+                } else {
+                    idInput.disabled = true;
+                    qtyInput.disabled = true;
+                }
+            }
+        });
+
+        if (!hasItems) {
+            alert('Anda belum memasukkan kuantitas untuk produk apapun.');
+            // Re-enable disabled inputs so user can try again
+            document.querySelectorAll('#order-list input[disabled]').forEach(input => input.disabled = false);
+            return;
+        }
 
         if (!navigator.onLine) {
+            const formData = new FormData(form);
             const fields = {};
             formData.forEach((value, key) => {
                 if (key !== '_token') fields[key] = value;
@@ -579,9 +601,11 @@
 
             alert('Mode Offline: Data Order berhasil disimpan di perangkat.');
             form.reset();
-            switchStep(2); // Kembali ke langkah sebelumnya atau tampilan awal
+            switchStep(2); // Kembali ke langkah sebelumnya
             return;
         }
+
+        // Jika online, submit seperti biasa
         form.submit();
     });
 
