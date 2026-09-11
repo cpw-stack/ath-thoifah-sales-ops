@@ -9,13 +9,18 @@
             <h2 class="display text-2xl">Detail Order</h2>
             <p class="mono text-sm" style="color:var(--slate);">{{ $order->order_code }}</p>
         </div>
-        <a href="{{ route('admin.orders.index') }}" class="btn-outline">← Kembali</a>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.orders.pdf', $order->id) }}" target="_blank" class="btn" style="background:#dc2626;">📄 Print PDF</a>
+            <a href="{{ route('admin.orders.index') }}" class="btn-outline">← Kembali</a>
+        </div>
     </div>
 
+    <!-- Info Dasar Order -->
     <div class="card mb-6 p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Toko Mitra</div>
             <div class="font-semibold mt-1">{{ $order->customer->name }}</div>
+            <div class="text-xs text-gray-500">{{ $order->customer->address }}</div>
         </div>
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Salesman</div>

@@ -47,4 +47,12 @@ class OrderController extends Controller
         $order->update(['status' => $request->status]);
         return back()->with('success', 'Status order diperbarui.');
     }
+
+    public function downloadPdf(Order $order)
+    {
+        $order->load('customer', 'employee', 'items.product');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.orders.pdf', compact('order'));
+        $pdf->setPaper('A4', 'portrait');
+        return $pdf->stream('Invoice-' . $order->order_code . '.pdf');
+    }
 }

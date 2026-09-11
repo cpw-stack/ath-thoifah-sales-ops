@@ -60,13 +60,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/schedule-approvals/{request}/approve', [VisitPlanController::class, 'approveSchedule'])->name('schedule-approvals.approve');
         Route::post('/schedule-approvals/{request}/reject', [VisitPlanController::class, 'rejectSchedule'])->name('schedule-approvals.reject');
         
-        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
-
         Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
         Route::post('/collections/{collection}/verify', [CollectionController::class, 'verify'])->name('collections.verify');
         
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+        // ==========================================
+        // Orders Custom Routes (Dikonsolidasi di sini)
+        // ==========================================
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPdf'])->name('orders.pdf');
+        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
 
         // ==========================================
         // 2. RESOURCE ROUTES (Tengah)
@@ -90,8 +95,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/employees/{employee}/pdf', [EmployeeController::class, 'downloadPdf'])->name('employees.pdf');
         Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
-        
-        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     });
 
     // ==========================================
