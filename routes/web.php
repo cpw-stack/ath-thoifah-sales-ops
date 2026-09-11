@@ -42,62 +42,56 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         
         // ==========================================
-        // 1. CUSTOM ROUTES (WAJIB di ATAS RESOURCE)
+        // 1. CUSTOM ROUTES TANPA PARAMETER (Paling Atas)
         // ==========================================
-
-        // Areas Custom Routes
         Route::get('/areas/template', [SalesAreaController::class, 'template'])->name('areas.template');
         Route::post('/areas/import', [SalesAreaController::class, 'import'])->name('areas.import');
         Route::delete('/areas/bulk-delete', [SalesAreaController::class, 'bulkDestroy'])->name('areas.bulk-destroy');
 
-        // Products Custom Routes
         Route::get('/products/template', [ProductController::class, 'template'])->name('products.template');
         Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
         Route::delete('/products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-destroy');
 
-        // Customers Custom Routes
         Route::get('/customers/template', [CustomerController::class, 'template'])->name('customers.template');
         Route::post('/customers/import', [CustomerController::class, 'import'])->name('customers.import');
         Route::delete('/customers/bulk-delete', [CustomerController::class, 'bulkDestroy'])->name('customers.bulk-destroy');
+
+        Route::get('/schedule-approvals', [VisitPlanController::class, 'approvalIndex'])->name('schedule-approvals.index');
+        Route::post('/schedule-approvals/{request}/approve', [VisitPlanController::class, 'approveSchedule'])->name('schedule-approvals.approve');
+        Route::post('/schedule-approvals/{request}/reject', [VisitPlanController::class, 'rejectSchedule'])->name('schedule-approvals.reject');
         
-        // Customers Detail & Discount Management
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+
+        Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
+        Route::post('/collections/{collection}/verify', [CollectionController::class, 'verify'])->name('collections.verify');
+        
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+        // ==========================================
+        // 2. RESOURCE ROUTES (Tengah)
+        // ==========================================
+        Route::resource('areas', SalesAreaController::class);
+        Route::resource('products', ProductController::class);
+        Route::resource('customers', CustomerController::class)->except(['show']); 
+        Route::resource('employees', EmployeeController::class)->except(['show']);
+        Route::resource('tasks', TaskController::class);
+        Route::resource('targets', TargetController::class);
+        Route::resource('visit-plans', VisitPlanController::class); 
+
+        // ==========================================
+        // 3. CUSTOM ROUTES DENGAN PARAMETER (Paling Bawah)
+        // ==========================================
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::post('/customers/{customer}/discount', [CustomerController::class, 'storeDiscount'])->name('customers.discount.store');
         Route::delete('/customers/{customer}/discount/{discount}', [CustomerController::class, 'destroyDiscount'])->name('customers.discount.destroy');
         Route::post('/customers/{customer}/discount/{discount}/approve', [CustomerController::class, 'approveDiscount'])->name('customers.discount.approve');
         Route::post('/customers/{customer}/discount/{discount}/reject', [CustomerController::class, 'rejectDiscount'])->name('customers.discount.reject');
 
-        // Employees Custom Routes
         Route::get('/employees/{employee}/pdf', [EmployeeController::class, 'downloadPdf'])->name('employees.pdf');
         Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
-
-        // Schedule Approvals
-        Route::get('/schedule-approvals', [VisitPlanController::class, 'approvalIndex'])->name('schedule-approvals.index');
-        Route::post('/schedule-approvals/{request}/approve', [VisitPlanController::class, 'approveSchedule'])->name('schedule-approvals.approve');
-        Route::post('/schedule-approvals/{request}/reject', [VisitPlanController::class, 'rejectSchedule'])->name('schedule-approvals.reject');
         
-        // Orders Custom Routes
-        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-        Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
-
-        // Collections Custom Routes
-        Route::get('/collections', [CollectionController::class, 'index'])->name('collections.index');
-        Route::post('/collections/{collection}/verify', [CollectionController::class, 'verify'])->name('collections.verify');
-        
-        // Reports
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-
-        // ==========================================
-        // 2. RESOURCE ROUTES (Diletakkan di BAWAH)
-        // ==========================================
-        Route::resource('areas', SalesAreaController::class);
-        Route::resource('products', ProductController::class);
-        Route::resource('customers', CustomerController::class)->except(['show']); // Show sudah didefinisikan di custom routes
-        Route::resource('employees', EmployeeController::class)->except(['show']); // Show sudah didefinisikan di custom routes
-        Route::resource('tasks', TaskController::class);
-        Route::resource('targets', TargetController::class);
-        Route::resource('visit-plans', VisitPlanController::class); 
     });
 
     // ==========================================
