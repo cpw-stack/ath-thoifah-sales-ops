@@ -167,39 +167,6 @@
             </a>
         </div>
 
-        <!-- Status Usulan Jadwal -->
-        @if($scheduleRequests->count() > 0)
-        <div>
-            <div class="text-sm font-bold uppercase mb-3" style="color:var(--ink);">Status Usulan Jadwal</div>
-            <div class="space-y-3">
-                @foreach($scheduleRequests as $req)
-                <div class="card p-4">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <div class="font-bold text-base">{{ $req->customer->name }}</div>
-                            <div class="text-xs" style="color:var(--slate);">{{ \Carbon\Carbon::parse($req->visit_date)->translatedFormat('l, d M Y') }}</div>
-                        </div>
-                        @if($req->status == 'pending')
-                            <span class="chip chip-pending">Menunggu</span>
-                        @elseif($req->status == 'approved')
-                            <span class="chip chip-done">Disetujui</span>
-                        @elseif($req->status == 'rejected')
-                            <span class="chip chip-late">Ditolak</span>
-                        @else
-                            <span class="chip chip-late">Kedaluwarsa</span>
-                        @endif
-                    </div>
-                    @if($req->status == 'rejected' && $req->reject_reason)
-                    <div class="text-xs mt-2 p-2 rounded" style="background:var(--red-soft); color:var(--red);">
-                        Alasan: {{ $req->reject_reason }}
-                    </div>
-                    @endif
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
-
         <!-- Daftar Kunjungan Hari Ini -->
         <div id="visits">
             <div class="flex justify-between items-center mb-3">
@@ -250,6 +217,40 @@
                 </div>
             @endif
         </div>
+
+        <!-- Status Usulan Jadwal -->
+        @if($scheduleRequests->count() > 0)
+        <div>
+            <div class="text-sm font-bold uppercase mb-3" style="color:var(--ink);">Status Usulan Jadwal</div>
+            <div class="space-y-3">
+                @foreach($scheduleRequests as $req)
+                <div class="card p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-bold text-base">{{ $req->customer->name }}</div>
+                            <div class="text-xs" style="color:var(--slate);">{{ \Carbon\Carbon::parse($req->visit_date)->translatedFormat('l, d M Y') }}</div>
+                        </div>
+                        @if($req->status == 'pending')
+                            <span class="chip chip-pending">Menunggu</span>
+                        @elseif($req->status == 'approved')
+                            <span class="chip chip-done">Disetujui</span>
+                        @elseif($req->status == 'rejected')
+                            <span class="chip chip-late">Ditolak</span>
+                        @else
+                            <span class="chip chip-late">Kedaluwarsa</span>
+                        @endif
+                    </div>
+                    @if($req->status == 'rejected' && $req->reject_reason)
+                    <div class="text-xs mt-2 p-2 rounded" style="background:var(--red-soft); color:var(--red);">
+                        Alasan: {{ $req->reject_reason }}
+                    </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
     @endif
 
     <!-- Tugas Hari Ini (Tampil untuk semua tipe salesman) -->
