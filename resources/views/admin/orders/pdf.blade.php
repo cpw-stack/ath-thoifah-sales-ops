@@ -20,7 +20,7 @@
 
     <div class="header">
         <h1>INVOICE ORDER</h1>
-        <p>PT Ath-Thoifah &bull; {{ $order->created_at->format('d M Y') }}</p>
+        <p>CV. Ath-Thoifah &bull; {{ $order->created_at->format('d M Y') }}</p>
     </div>
 
     <div class="section">

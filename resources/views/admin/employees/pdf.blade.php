@@ -24,7 +24,7 @@
 
     <div class="header">
         <h1>LAPORAN PERFORMA SALESMAN</h1>
-        <p>PT Ath-Thoifah &bull; Periode: {{ now()->translatedFormat('F Y') }}</p>
+        <p>CV. Ath-Thoifah &bull; Periode: {{ now()->translatedFormat('F Y') }}</p>
     </div>
 
     <div class="section">
