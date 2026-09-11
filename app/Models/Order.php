@@ -8,7 +8,13 @@ class Order extends Model
 {
 
     protected $fillable = ['order_code', 'visit_id', 'customer_id', 'employee_id', 'total_amount', 
-    'payment_type', 'delivery_date', 'notes', 'status'];
+    'payment_type', 'delivery_date', 'notes', 'status','is_editable','locked_at',
+    ];
+
+    public function revisions()
+    {
+        return $this->hasMany(OrderRevision::class);
+    }
 
     public function items()
     {

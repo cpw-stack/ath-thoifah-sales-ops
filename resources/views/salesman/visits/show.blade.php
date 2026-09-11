@@ -89,11 +89,11 @@
     .summary-row .value.ok { color: var(--green); font-weight: 700; font-size: 13px; }
     .summary-row .value.pending { color: var(--slate); font-weight: 600; font-size: 13px; }
 
-    #checkInModal .modal-box { border-radius: 18px; padding: 22px; }
-    #checkInModal h3 { font-size: 19px; font-weight: 800; color: var(--ink); }
-    #checkInModal p { font-size: 14px; color: var(--slate); }
-    #checkInModal label { font-size: 14px; font-weight: 600; color: var(--ink); }
-    #checkInModal .btn-outline-green, #checkInModal .btn-primary { font-size: 15px; font-weight: 700; padding: 14px 18px; min-height: 50px; border-radius: 12px; }
+    #checkInModal .modal-box, #revisionModal .modal-box { border-radius: 18px; padding: 22px; }
+    #checkInModal h3, #revisionModal h3 { font-size: 19px; font-weight: 800; color: var(--ink); }
+    #checkInModal p, #revisionModal p { font-size: 14px; color: var(--slate); }
+    #checkInModal label, #revisionModal label { font-size: 14px; font-weight: 600; color: var(--ink); }
+    #checkInModal .btn-outline-green, #checkInModal .btn-primary, #revisionModal .btn-primary { font-size: 15px; font-weight: 700; padding: 14px 18px; min-height: 50px; border-radius: 12px; }
 </style>
 
 <div class="visit-shell" id="visitShell">
@@ -224,13 +224,39 @@
                 <span class="panel-title">Form Pemesanan (DP)</span>
                 @if($visit->order) <span class="panel-status-pill done">Rp {{ number_format($visit->order->total_amount, 0, ',', '.') }}</span> @else <span class="panel-status-pill pending">Belum ada order</span> @endif
             </div>
+            
             @if($visit->order)
+                @php $order = $visit->order; @endphp
+                
                 <div class="empty-state">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"></path></svg>
                     <div class="empty-title">Order sudah dibuat</div>
-                    <div class="empty-sub">Total order Rp {{ number_format($visit->order->total_amount, 0, ',', '.') }} ({{ $visit->order->payment_type }})</div>
+                    <div class="empty-sub">Total order Rp {{ number_format($order->total_amount, 0, ',', '.') }} ({{ $order->payment_type }})</div>
                 </div>
-                <button onclick="switchStep(4)" class="btn-primary btn-primary-block">Lanjut ke Penagihan →</button>
+
+                <!-- Tombol Aksi Order -->
+                <div class="mt-4 space-y-3">
+                    @if(($order->is_editable ?? true) && $order->payment_status == 'unpaid' && $order->created_at->isToday())
+                        <!-- SKENARIO 1: BISA EDIT LANGSUNG -->
+                        <a href="{{ route('salesman.orders.edit', $order) }}" class="btn-primary btn-primary-block" style="margin-top: 0;">
+                            ✏️ Edit Order Langsung
+                        </a>
+                    @else
+                        <!-- SKENARIO 2: WAJIB AJUKAN REVISI -->
+                        @if($order->revisions()->where('status', 'pending')->exists())
+                            <div class="p-3 text-center text-xs rounded-xl" style="background:var(--paper-dim); color:var(--slate);">
+                                ⏳ Pengajuan revisi sedang menunggu persetujuan Admin.
+                            </div>
+                        @else
+                            <button type="button" onclick="openRevisionModal({{ $order->id }})" class="btn-secondary-block">
+                                📝 Ajukan Revisi Order
+                            </button>
+                        @endif
+                    @endif
+                    
+                    <button onclick="switchStep(4)" class="btn-primary btn-primary-block" style="background:var(--ink);">Lanjut ke Penagihan →</button>
+                </div>
+
             @else
                 <!-- Info Diskon Mitra -->
                 <div class="mb-4 p-3 rounded-xl border-2 border-dashed" style="border-color:var(--border); background:var(--paper-dim);">
@@ -443,7 +469,7 @@
 </div>
 
 <!-- Modal Check-In -->
-<div id="checkInModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden justify-center items-center z-50" style="padding:20px;">
+<div id="checkInModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50" style="padding:20px;">
     <div class="bg-white modal-box w-full max-w-md mx-4">
         <h3 class="font-semibold mb-3">Konfirmasi Check-In</h3>
         <p class="text-gray-500 mb-4">Pastikan Anda berada di lokasi toko.</p>
@@ -461,6 +487,27 @@
             </div>
         </form>
         <p id="gpsStatus" class="text-blue-500 mt-3" style="font-size:13px;"></p>
+    </div>
+</div>
+
+<!-- MODAL PENGAJUAN REVISI -->
+<div id="revisionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-end z-50" style="padding:10px;">
+    <div class="bg-white rounded-t-2xl p-5 w-full max-w-md mx-auto modal-box">
+        <h3 class="font-bold text-lg mb-2">Pengajuan Revisi Order</h3>
+        <p class="text-xs mb-4" style="color:var(--slate);">
+            Order ini sudah selesai / lewat batas waktu edit. Harap ajukan revisi dengan alasan yang jelas. Admin akan memverifikasi.
+        </p>
+
+        <form id="revisionForm" action="" method="POST">
+            @csrf
+            <div class="mb-4">
+                <label class="block text-xs font-bold mb-1" style="color:var(--slate);">Alasan Revisi (Wajib)</label>
+                <textarea name="reason" rows="4" class="w-full p-2 text-sm rounded-lg border" style="border-color:var(--border);" placeholder="Contoh: Salah input qty 1 dus, barang rusak, dll." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary w-full text-sm" style="padding:14px; border-radius:12px; font-weight:700;">Kirim Pengajuan</button>
+            <button type="button" onclick="closeRevisionModal()" class="w-full text-xs mt-2 p-2" style="color:var(--slate);">Batal</button>
+        </form>
     </div>
 </div>
 
@@ -560,6 +607,18 @@
     function closeCheckInModal() {
         checkInModal.classList.add('hidden');
         checkInModal.classList.remove('flex');
+    }
+
+    // Fungsi Modal Revisi Order
+    function openRevisionModal(orderId) {
+        document.getElementById('revisionForm').action = `/salesman/orders/${orderId}/revision`;
+        document.getElementById('revisionModal').classList.remove('hidden');
+        document.getElementById('revisionModal').classList.add('flex');
+    }
+
+    function closeRevisionModal() {
+        document.getElementById('revisionModal').classList.add('hidden');
+        document.getElementById('revisionModal').classList.remove('flex');
     }
 
     // Intercept Form Order

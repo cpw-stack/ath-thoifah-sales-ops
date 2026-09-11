@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\TargetController; 
 use App\Http\Controllers\ScoreboardController; 
 use App\Http\Controllers\Admin\VisitPlanController;
+use App\Http\Controllers\OrderRevisionController; // <-- Ditambahkan
 
 // Public Landing Page
 Route::get('/', function () {
@@ -111,6 +112,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/visits/{visit}/order', [VisitController::class, 'storeOrder'])->name('visits.order');
         Route::post('/visits/{visit}/collection', [VisitController::class, 'storeCollection'])->name('visits.collection');
         Route::post('/visits/{visit}/propose-discount', [VisitController::class, 'proposeDiscount'])->name('visits.propose_discount');
+        
+        // Order Revision (Ditambahkan di sini)
+        // Catatan: Karena berada di dalam group name('salesman.'), 
+        // name 'orders.revision.store' akan otomatis menjadi 'salesman.orders.revision.store'
+        Route::post('/orders/{order}/revision', [OrderRevisionController::class, 'store'])->name('orders.revision.store');
         
         // Salesman Only Actions
         Route::middleware(['role:salesman'])->group(function () {
