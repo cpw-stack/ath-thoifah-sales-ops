@@ -13,7 +13,7 @@
             $currentStep = 2;
         } elseif (!$visit->order) {
             $currentStep = 3;
-        } elseif ($visit->collections()->count() == 0) {
+        } elseif ($receivables->count() > 0 && $visit->collections()->count() == 0) {
             $currentStep = 4;
         } else {
             $currentStep = 5;
@@ -120,7 +120,7 @@
                     1 => (bool) $visit->check_in_at,
                     2 => $visit->productChecks->count() > 0,
                     3 => (bool) $visit->order,
-                    4 => $visit->collections()->count() > 0,
+                    4 => $visit->collections()->count() > 0 || $receivables->count() === 0, // Done if collected OR no receivables
                     5 => (bool) $visit->check_out_at,
                 ];
             @endphp
@@ -449,7 +449,14 @@
             <div class="summary-list">
                 <div class="summary-row"><span class="label">Cek Produk</span><span class="value {{ $stepDone[2] ? 'ok' : 'pending' }}">{{ $stepDone[2] ? '✓ Selesai' : 'Belum' }}</span></div>
                 <div class="summary-row"><span class="label">Order</span><span class="value {{ $stepDone[3] ? 'ok' : 'pending' }}">{{ $stepDone[3] ? '✓ Selesai' : 'Belum' }}</span></div>
-                <div class="summary-row"><span class="label">Penagihan</span><span class="value {{ $stepDone[4] ? 'ok' : 'pending' }}">{{ $stepDone[4] ? '✓ Selesai' : 'Belum' }}</span></div>
+                <div class="summary-row">
+                    <span class="label">Penagihan</span>
+                    @if($receivables->count() === 0)
+                        <span class="value" style="color: var(--slate);">Tidak Ada</span>
+                    @else
+                        <span class="value {{ $stepDone[4] ? 'ok' : 'pending' }}">{{ $stepDone[4] ? '✓ Selesai' : 'Belum' }}</span>
+                    @endif
+                </div>
             </div>
             @if($visit->check_out_at)
                 <div class="empty-state">
