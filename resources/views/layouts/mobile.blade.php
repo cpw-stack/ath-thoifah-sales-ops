@@ -15,6 +15,7 @@
     --ink:#1B2A41; --ink-soft:#3A4A63; --paper:#F6F2E9; --paper-dim:#EDE6D6;
     --orange:#E8622C; --orange-dark:#C94E1E; --green:#2F6F4F; --green-soft:#E4EFE8;
     --red:#C23B22; --red-soft:#F7E4DF; --slate:#6B7280; --amber:#B8860B;
+    --border:#E7DFCB;
   }
   *{box-sizing:border-box;}
 
@@ -79,8 +80,8 @@
   .chip-late{background:var(--red-soft); color:var(--red);}
   .chip-dark{background:rgba(255,255,255,.12); color:#E7EAF0;}
 
-  .card{background:#fff; border:1px solid #E7DFCB; border-radius:14px;}
-  .btn-primary{background:var(--orange); color:#fff; font-weight:700; border-radius:10px; padding:13px 16px; text-align:center; box-shadow:0 4px 0 var(--orange-dark); display:inline-block;}
+  .card{background:#fff; border:1px solid var(--border); border-radius:14px;}
+  .btn-primary{background:var(--orange); color:#fff; font-weight:700; border-radius:10px; padding:13px 16px; text-align:center; box-shadow:0 4px 0 var(--orange-dark); display:inline-block; border:none; cursor:pointer;}
   .btn-outline-green{border:1.5px solid var(--green); color:var(--green); font-weight:700; border-radius:10px; padding:10px 14px; display:inline-block;}
 
   .progress-track{background:#EAE2CB; border-radius:8px; height:10px; overflow:hidden;}
@@ -103,6 +104,9 @@
   .screen::-webkit-scrollbar{width:0;}
 
   .stamp{border:2px solid var(--green); color:var(--green); font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:11px; padding:3px 10px; border-radius:6px; transform:rotate(-4deg); display:inline-block;}
+  
+  /* Tambahan untuk x-cloak */
+  [x-cloak] { display: none !important; }
 </style>
 </head>
 <body>
@@ -160,7 +164,7 @@
   </div>
 </div>
 
-<!-- Simple Script for Clock (No Alpine needed) -->
+<!-- Simple Script for Clock -->
 <script>
   function updateClock(){
     const d = new Date();
@@ -172,14 +176,21 @@
   setInterval(updateClock, 30000);
 </script>
 
+<!-- TAMBAHAN: Alpine.js (Wajib agar dropdown pencarian berfungsi) -->
+<script defer src="{{ asset('js/alpine.min.js') }}"></script>
+
 <!-- Library untuk Offline Database -->
-<script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+<script src="{{ asset('js/localforage.min.js') }}"></script>
 
 <script>
     // Setup LocalForage
-    window.localDB = localforage.createInstance({
-        name: 'ath_thoifah_offline'
-    });
+    if (typeof localforage !== 'undefined') {
+        window.localDB = localforage.createInstance({
+            name: 'ath_thoifah_offline'
+        });
+    } else {
+        console.error('Localforage gagal dimuat! Pastikan file ada di public/js/localforage.min.js');
+    }
 
     // Deteksi Online/Offline
     function updateOnlineStatus() {
@@ -199,6 +210,8 @@
 
     // Fungsi generic untuk sync semua data tertunda
     async function syncPendingData() {
+        if (typeof localDB === 'undefined') return;
+        
         const keys = await localDB.keys();
         let hasSynced = false;
 
