@@ -81,6 +81,34 @@ class VisitController extends Controller
         return view('salesman.visits.index', compact('plans', 'tasks', 'scheduleRequests', 'isOnlineSalesman'));
     }
 
+    public function orderIndex()
+    {
+        $employee = auth()->user()->employee;
+        
+        $orders = Order::with('customer')
+            ->where('employee_id', $employee->id)
+            ->latest()
+            ->paginate(10); // Ubah dari 15 ke 10
+
+        return view('salesman.orders.index', compact('orders'));
+    }
+
+    public function showOrder(Order $order)
+    {
+        if (auth()->user()->employee->id !== $order->employee_id) {
+            abort(403, 'Akses ditolak. Ini bukan order Anda.');
+        }
+
+        // Load relasi standar
+        $order->load('customer', 'items.product');
+
+        // Ambil nama salesman berdasarkan relasi yang benar (Employee -> User)
+        $employee = \App\Models\Employee::with('user')->find($order->employee_id);
+        $salesmanName = $employee?->user?->name ?? 'Salesman Tidak Diketahui';
+
+        return view('salesman.orders.show', compact('order', 'salesmanName'));
+    }
+
     // Fungsi untuk menyimpan laporan online
     public function storeOnlineReport(Request $request)
     {

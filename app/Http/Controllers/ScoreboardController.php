@@ -1,4 +1,5 @@
 <?php
+// app\Http\Controllers\ScoreboardController.php
 
 namespace App\Http\Controllers;
 
@@ -13,7 +14,28 @@ use Illuminate\Support\Facades\DB;
 
 class ScoreboardController extends Controller
 {
+    /**
+     * Tampilan Fullscreen untuk TV Kantor
+     */
     public function index()
+    {
+        $data = $this->getScoreboardData();
+        return view('public.scoreboard', $data);
+    }
+
+    /**
+     * Tampilan Mobile untuk di dalam PWA Salesman
+     */
+    public function mobileIndex()
+    {
+        $data = $this->getScoreboardData();
+        return view('salesman.scoreboard', $data);
+    }
+
+    /**
+     * Logic pengambilan data scoreboard yang dipakai bersama
+     */
+    private function getScoreboardData()
     {
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();
@@ -37,14 +59,14 @@ class ScoreboardController extends Controller
             })
             ->sortByDesc('total_sales')
             ->take(10)
-            ->values(); // Reset keys agar berurutan (0, 1, 2, 3, 4, 5)
+            ->values();
 
         $salesmen->each(function($s) {
             $s->total_sales = $s->total_sales ?? 0;
         });
 
-        $top3 = $salesmen->take(3)->values(); // Reset keys (0, 1, 2)
-        $rest = $salesmen->slice(3)->values(); // Reset keys (0, 1, 2, dst)
+        $top3 = $salesmen->take(3)->values();
+        $rest = $salesmen->slice(3)->values();
         $maxSales = $salesmen->first() ? $salesmen->first()->total_sales : 1;
 
         // 2. Target Tim (Gauges)
@@ -123,6 +145,6 @@ class ScoreboardController extends Controller
             $mb['pct'] = $mb['target'] > 0 ? min(100, round(($mb['actual'] / $mb['target']) * 100)) : 0;
         }
 
-        return view('public.scoreboard', compact('top3', 'rest', 'maxSales', 'gauges', 'topPerformer', 'topPerformerPct', 'tickerItems', 'period', 'topProducts', 'maxQty', 'metricBars'));
+        return compact('top3', 'rest', 'maxSales', 'gauges', 'topPerformer', 'topPerformerPct', 'tickerItems', 'period', 'topProducts', 'maxQty', 'metricBars');
     }
 }

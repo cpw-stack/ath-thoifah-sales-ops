@@ -22,9 +22,9 @@
             <div class="font-semibold mt-1">{{ $order->customer->name }}</div>
             <div class="text-xs text-gray-500">{{ $order->customer->address }}</div>
         </div>
-        <div>
-            <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Salesman</div>
-            <div class="font-semibold mt-1">{{ $order->employee->full_name }}</div>
+        <div class="flex justify-between">
+            <span style="color:var(--slate);">Salesman</span>
+            <span class="font-semibold">{{ $order->employee->user->name ?? '-' }}</span>
         </div>
         <div>
             <div class="text-xs uppercase tracking-wider" style="color:var(--slate);">Tanggal Order</div>

@@ -26,8 +26,11 @@ Route::get('/', function () {
     return view('public.landing');
 });
 
-// Papan Skor Publik (Internal) - Membutuhkan autentikasi
+// Route untuk Ditampilkan di TV Kantor (Full Screen) - Membutuhkan autentikasi
 Route::get('/scoreboard', [ScoreboardController::class, 'index'])->name('scoreboard')->middleware('auth');
+
+// Route untuk Salesman di dalam PWA (Mobile Layout)
+Route::get('/mobile/scoreboard', [ScoreboardController::class, 'mobileIndex'])->name('scoreboard.mobile')->middleware('auth');
 
 // Authenticated Routes
 Route::middleware(['auth'])->group(function () {
@@ -118,6 +121,8 @@ Route::middleware(['auth'])->group(function () {
         // Catatan: Karena berada di dalam group name('salesman.'), 
         // name 'orders.revision.store' akan otomatis menjadi 'salesman.orders.revision.store'
         Route::post('/orders/{order}/revision', [OrderRevisionController::class, 'store'])->name('orders.revision.store');
+        Route::get('/orders', [VisitController::class, 'orderIndex'])->name('orders.index');
+        Route::get('/orders/{order}', [VisitController::class, 'showOrder'])->name('orders.show'); 
         
         // Salesman Only Actions
         Route::middleware(['role:salesman'])->group(function () {

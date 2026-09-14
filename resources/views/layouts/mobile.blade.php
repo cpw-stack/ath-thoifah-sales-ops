@@ -153,8 +153,8 @@
       <a href="{{ route('salesman.schedule.create') }}" class="navbtn {{ request()->routeIs('salesman.schedule.*') ? 'active' : '' }}">
         <span class="navicon">📅</span> Jadwal
       </a>
-      <a href="{{ route('salesman.visits.index') }}" class="navbtn {{ request()->routeIs('salesman.visits.*') ? 'active' : '' }}">
-        <span class="navicon">📍</span> Kunjungan
+      <a href="{{ route('salesman.orders.index') }}" class="navbtn {{ request()->routeIs('salesman.orders.*') ? 'active' : '' }}">
+          <span class="navicon">📦</span> Order
       </a>
     @endif
 

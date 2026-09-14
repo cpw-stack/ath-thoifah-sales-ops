@@ -17,6 +17,47 @@
         </div>
     @endif
 
+    <!-- PROFILE HEADER & STATISTIK -->
+    <div class="card p-6 mb-6 flex flex-col sm:flex-row items-center gap-6">
+        <div class="relative flex-shrink-0">
+            <img src="{{ $user->photo ? asset('storage/' . $user->photo) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=1B2A41&color=fff' }}" class="w-24 h-24 rounded-full object-cover border-4" style="border-color: var(--border);">
+            
+            <!-- Badge Peringkat Menempel di Foto -->
+            @if($rank)
+            <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md border-2 border-white whitespace-nowrap" style="background: var(--orange);">
+                🏆 Rank #{{ $rank }}
+            </div>
+            @endif
+        </div>
+
+        <div class="flex-1 text-center sm:text-left">
+            <h3 class="display text-xl" style="color:var(--ink);">{{ $user->name }}</h3>
+            <p class="text-sm" style="color:var(--slate);">{{ $user->email }}</p>
+            
+            <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-center sm:justify-start">
+                <div class="flex items-center gap-2 text-sm">
+                    <span style="color:var(--slate);">Peringkat Bulan Ini:</span>
+                    @if($rank)
+                        <span class="badge badge-green font-bold">#{{ $rank }}</span>
+                    @else
+                        <span class="badge badge-slate">Belum Berperingkat</span>
+                    @endif
+                </div>
+                
+                <div class="hidden sm:block w-px h-6" style="background:var(--border);"></div>
+                
+                <div class="flex items-center gap-2 text-sm">
+                    <span style="color:var(--slate);">Total Penjualan:</span>
+                    <span class="font-bold mono" style="color:var(--ink);">Rp {{ number_format($currentSales, 0, ',', '.') }}</span>
+                </div>
+            </div>
+
+            <a href="{{ route('scoreboard') }}" target="_blank" class="inline-block mt-4 text-sm font-bold hover:underline" style="color:var(--orange);">
+                📺 Lihat Papan Skor Tim →
+            </a>
+        </div>
+    </div>
+
     <!-- Form Info Dasar -->
     <div class="card mb-6">
         <div class="p-5 border-b" style="border-color:var(--border);">
@@ -61,9 +102,6 @@
                     <label class="block text-xs mb-1" style="color:var(--slate);">Foto Profil</label>
                     <input type="file" name="photo" accept="image/*" class="text-sm">
                 </div>
-                @if($user->photo_path)
-                    <img src="{{ asset('storage/' . $user->photo_path) }}" class="w-16 h-16 rounded-full object-cover">
-                @endif
             </div>
 
             <div class="flex justify-end mt-4">

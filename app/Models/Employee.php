@@ -15,12 +15,12 @@ class Employee extends Model
         'user_id', 'employee_code', 'full_name', 'phone_number', 'sales_area_id', 
         'supervisor_id', 'status', 'birth_date', 'gender', 'id_card_number', 'type'
     ];
-
+    
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(User::class); 
     }
-    
+
     public function salesArea()
     {
         return $this->belongsTo(SalesArea::class);

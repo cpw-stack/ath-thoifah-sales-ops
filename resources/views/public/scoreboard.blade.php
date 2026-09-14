@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ath-Thoifah — Papan Skor Tim Sales</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
     --red:#E14F3A;
     --slate:#8FA0BC;
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   body{
     margin:0; min-height:100vh; overflow:hidden;
     background:radial-gradient(circle at 20% 10%, #1B2E4A 0%, var(--ink) 55%);
@@ -33,163 +33,137 @@
     background-size: 26px 26px;
   }
 
-  .wrap{position:relative; z-index:2; padding:34px 54px; height:100vh; display:flex; flex-direction:column;}
-  .header{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;}
-  .brand-eyebrow{font-size:13px; letter-spacing:.24em; text-transform:uppercase; color:var(--slate);}
-  .brand-title{font-size:30px; margin-top:4px;}
+  .wrap{position:relative; z-index:2; padding:24px; height:100vh; display:flex; flex-direction:column;}
+  .header{display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;}
+  .brand-eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--slate);}
+  .brand-title{font-size:22px; margin-top:2px;}
   .clock-box{text-align:right;}
-  .clock{font-size:34px;}
-  .dateline{font-size:13px; color:var(--slate); margin-top:2px; letter-spacing:.05em;}
+  .clock{font-size:20px;}
+  .dateline{font-size:10px; color:var(--slate); margin-top:2px; letter-spacing:.05em;}
 
-  .stage{flex:1; position:relative;}
-  .slide{position:absolute; inset:0; opacity:0; transition:opacity .7s ease; pointer-events:none; display:flex; flex-direction:column;}
+  .stage{flex:1; position:relative; min-height: 0;}
+  .slide{position:absolute; inset:0; opacity:0; transition:opacity .7s ease; pointer-events:none; display:flex; flex-direction:column; overflow-y:auto;}
   .slide.active{opacity:1; pointer-events:auto;}
 
-  .lb-title{font-size:15px; letter-spacing:.18em; text-transform:uppercase; color:var(--orange-glow); margin-bottom:18px; text-align:center;}
+  .lb-title{font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--orange-glow); margin-bottom:15px; text-align:center;}
 
   /* Podium & Avatar */
-  .podium{display:flex; align-items:flex-end; gap:26px; justify-content:center; margin:10px 0 30px;}
+  .podium{display:flex; align-items:flex-end; gap:15px; justify-content:center; margin:10px 0 20px;}
   .pod{
     background:linear-gradient(180deg,#203450,#16283F);
-    border-radius:18px 18px 8px 8px; text-align:center; padding:20px 26px; position:relative;
+    border-radius:18px 18px 8px 8px; text-align:center; padding:15px 12px; position:relative;
     border:1px solid rgba(255,255,255,.06);
   }
-  .pod.first{height:260px; border-top:4px solid var(--amber);}
-  .pod.second{height:220px; border-top:4px solid #C7CEDA;}
-  .pod.third{height:190px; border-top:4px solid #C97C4A;}
-  .pod .rank{font-family:'Archivo Black',sans-serif; font-size:44px; color:var(--orange); margin-top:10px;}
-  .pod .name{font-size:19px; font-weight:700; margin-top:6px;}
-  .pod .score{font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--green); margin-top:4px;}
-  .medal{font-size:26px; position:absolute; top:-15px; left:50%; transform:translateX(-50%);}
+  .pod.first{height:220px; border-top:4px solid var(--amber);}
+  .pod.second{height:190px; border-top:4px solid #C7CEDA;}
+  .pod.third{height:160px; border-top:4px solid #C97C4A;}
+  .pod .rank{font-family:'Archivo Black',sans-serif; font-size:32px; color:var(--orange); margin-top:8px;}
+  .pod .name{font-size:14px; font-weight:700; margin-top:4px;}
+  .pod .score{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green); margin-top:4px;}
+  .medal{font-size:24px; position:absolute; top:-15px; left:50%; transform:translateX(-50%);}
 
-  .avatar{width:70px; height:70px; border-radius:50%; background:var(--ink); margin:0 auto 10px; overflow:hidden; border:3px solid var(--slate); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; color:var(--paper);}
-  .pod.first .avatar{width:90px; height:90px; border-color:var(--amber);}
+  .avatar{width:60px; height:60px; border-radius:50%; background:var(--ink); margin:0 auto 8px; overflow:hidden; border:3px solid var(--slate); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:var(--paper);}
+  .pod.first .avatar{width:80px; height:80px; border-color:var(--amber);}
   .avatar img{width:100%; height:100%; object-fit:cover;}
 
   /* Leaderboard List */
   .lb-list{max-width:900px; margin:0 auto; width:100%;}
-  .lb-row{display:flex; align-items:center; gap:20px; padding:12px 18px; border-bottom:1px solid rgba(255,255,255,.07);}
-  .lb-rank{font-family:'JetBrains Mono',monospace; font-size:18px; width:34px; color:var(--slate);}
-  .lb-avatar{width:34px; height:34px; border-radius:50%; background:var(--ink2); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;}
+  .lb-row{display:flex; align-items:center; gap:15px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.07);}
+  .lb-rank{font-family:'JetBrains Mono',monospace; font-size:14px; width:24px; color:var(--slate);}
+  .lb-avatar{width:32px; height:32px; border-radius:50%; background:var(--ink2); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;}
   .lb-avatar img{width:100%; height:100%; object-fit:cover;}
-  .lb-name{flex:1; font-size:17px; font-weight:600;}
-  .lb-bar-track{width:260px; height:10px; background:rgba(255,255,255,.08); border-radius:6px; overflow:hidden;}
+  .lb-name{flex:1; font-size:14px; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  .lb-bar-track{width:80px; height:8px; background:rgba(255,255,255,.08); border-radius:6px; overflow:hidden; flex-shrink:0;}
   .lb-bar-fill{height:100%; background:linear-gradient(90deg,var(--orange),var(--orange-glow)); border-radius:6px;}
-  .lb-score{width:110px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:15px; color:var(--green);}
+  .lb-score{width:70px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--green);}
 
   /* Gauges */
-  .gauge-grid{display:flex; justify-content:center; gap:60px; align-items:center; height:100%;}
+  .gauge-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:30px; align-items:center; height:100%; padding: 20px 0;}
   .gauge-item{text-align:center;}
-  .gauge-title{font-size:15px; letter-spacing:.14em; text-transform:uppercase; color:var(--slate); margin-top:16px;}
+  .gauge-title{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--slate); margin-top:10px;}
 
   /* Top Performer */
-  .stamp-slide{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;}
-  .stamp-avatar{width:140px; height:140px; border-radius:50%; background:var(--ink); margin-bottom:20px; overflow:hidden; border:4px solid var(--green); display:flex; align-items:center; justify-content:center; font-size:48px; font-weight:700;}
+  .stamp-slide{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding: 20px;}
+  .stamp-avatar{width:100px; height:100px; border-radius:50%; background:var(--ink); margin-bottom:20px; overflow:hidden; border:4px solid var(--green); display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:700;}
   .stamp-avatar img{width:100%; height:100%; object-fit:cover;}
-  .stamp-name{font-size:54px; margin:14px 0 6px;}
+  .stamp-name{font-size:32px; margin:14px 0 6px;}
   .stamp-badge{
     border:4px solid var(--green); color:var(--green); font-family:'Barlow Condensed',sans-serif; font-weight:800;
-    font-size:20px; letter-spacing:.14em; text-transform:uppercase; padding:8px 26px; border-radius:10px; transform:rotate(-3deg);
+    font-size:16px; letter-spacing:.14em; text-transform:uppercase; padding:6px 20px; border-radius:10px; transform:rotate(-3deg);
     margin-top:18px; display:inline-block;
   }
-  .quote{font-size:22px; color:var(--slate); font-style:italic; max-width:700px; margin-top:26px; line-height:1.5;}
+  .quote{font-size:15px; color:var(--slate); font-style:italic; max-width:600px; margin-top:26px; line-height:1.5;}
 
   /* Top Products Slide */
-  .prod-list{max-width:800px; margin:0 auto; width:100%; margin-top:20px;}
-  .prod-row{display:flex; align-items:center; gap:20px; padding:15px 20px; background:rgba(255,255,255,0.03); border-radius:12px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.05);}
-  .prod-rank{font-family:'Archivo Black',sans-serif; font-size:24px; color:var(--orange); width:40px;}
-  .prod-info{flex:1;}
-  .prod-name{font-size:18px; font-weight:700;}
-  .prod-qty{font-size:13px; color:var(--slate); margin-top:2px;}
-  .prod-bar-track{width:200px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;}
+  .prod-list{max-width:800px; margin:0 auto; width:100%; margin-top:10px;}
+  .prod-row{display:flex; align-items:center; gap:15px; padding:12px 15px; background:rgba(255,255,255,0.03); border-radius:12px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.05);}
+  .prod-rank{font-family:'Archivo Black',sans-serif; font-size:18px; color:var(--orange); width:24px;}
+  .prod-info{flex:1; min-width:0;}
+  .prod-name{font-size:14px; font-weight:700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  .prod-qty{font-size:11px; color:var(--slate); margin-top:2px;}
+  .prod-bar-track{width:60px; height:6px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; flex-shrink:0;}
   .prod-bar-fill{height:100%; background:linear-gradient(90deg, var(--green), #4EC9A1); border-radius:4px;}
-  .prod-total{width:80px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--paper);}
+  .prod-total{width:60px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--paper);}
 
-  /* Metric Bars Slide (Slide 5) */
-  .metric-grid{max-width:800px; margin:0 auto; width:100%; padding-top:20px;}
-  .metric-row{margin-bottom:28px;}
-  .metric-header{display:flex; justify-content:space-between; margin-bottom:8px; font-size:16px;}
+  /* Metric Bars Slide */
+  .metric-grid{max-width:800px; margin:0 auto; width:100%; padding-top:10px;}
+  .metric-row{margin-bottom:20px;}
+  .metric-header{display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;}
   .metric-label{font-weight:700;}
-  .metric-value{font-family:'JetBrains Mono',monospace; color:var(--orange-glow);}
-  .metric-bar-bg{height:24px; background:rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; position:relative;}
+  .metric-value{font-family:'JetBrains Mono',monospace; color:var(--orange-glow); font-size:12px;}
+  .metric-bar-bg{height:20px; background:rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; position:relative;}
   .metric-bar-target{position:absolute; top:0; left:0; height:100%; width:100%; background:repeating-linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px);}
   .metric-bar-fill{height:100%; border-radius:12px; background:linear-gradient(90deg, var(--orange), var(--orange-glow)); position:relative; z-index:2; transition:width 1s ease;}
   .metric-bar-fill.green{background:linear-gradient(90deg, var(--green), #4EC9A1);}
   .metric-bar-fill.red{background:linear-gradient(90deg, var(--red), #FF6B5A);}
-  .metric-pct{text-align:right; font-size:13px; margin-top:4px; font-family:'JetBrains Mono',monospace; color:var(--slate);}
+  .metric-pct{text-align:right; font-size:11px; margin-top:4px; font-family:'JetBrains Mono',monospace; color:var(--slate);}
 
   /* Ticker */
   .ticker{
-    margin-top:20px; border-top:1px solid rgba(255,255,255,.08); padding-top:14px;
+    margin-top:15px; border-top:1px solid rgba(255,255,255,.08); padding-top:12px;
     display:flex; align-items:center; gap:16px; overflow:hidden;
   }
   .ticker-label{
-    background:var(--orange); color:#12100C; font-weight:800; font-size:12px; letter-spacing:.1em;
-    padding:6px 14px; border-radius:6px; flex-shrink:0; text-transform:uppercase;
+    background:var(--orange); color:#12100C; font-weight:800; font-size:10px; letter-spacing:.1em;
+    padding:4px 10px; border-radius:6px; flex-shrink:0; text-transform:uppercase;
     position: relative; z-index: 10;
   }
   .ticker-track{
-    display:flex; gap:50px; white-space:nowrap; animation:scroll 28s linear infinite;
-    min-width: 0;
+    display:flex; gap:40px; white-space:nowrap; animation:scroll 30s linear infinite;
   }
-  .ticker-item{font-size:14.5px; color:#C7D2E3;}
+  .ticker-item{font-size:12px; color:#C7D2E3;}
   .ticker-item b{color:var(--paper);}
   @keyframes scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 
-  .dots{display:flex; gap:8px; justify-content:center; margin-top:14px;}
-  .dot{width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); transition:background .3s;}
+  .dots{display:flex; gap:6px; justify-content:center; margin-top:10px; flex-shrink:0;}
+  .dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.2); transition:background .3s;}
   .dot.on{background:var(--orange);}
+  
+  .empty-state{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; color:var(--slate);}
+  .empty-state div{font-size:13px; margin-top:5px;}
 
-  /* === RESPONSIVE MOBILE === */
-  @media (max-width: 640px) {
-    .wrap{padding:20px 15px;}
-    .brand-title{font-size:20px;}
-    .clock{font-size:20px;}
-    .dateline{font-size:10px;}
-    .lb-title{font-size:12px;}
-    
-    .podium{gap:10px; margin:10px 0 20px;}
-    .pod{padding:10px 8px;}
-    .pod.first{height:180px;}
-    .pod.second{height:150px;}
-    .pod.third{height:130px;}
-    .pod .rank{font-size:24px;}
-    .pod .name{font-size:11px;}
-    .pod .score{font-size:10px;}
-    .avatar{width:40px; height:40px; font-size:16px; margin-bottom:5px;}
-    .pod.first .avatar{width:50px; height:50px;}
-    
-    .lb-row{gap:10px; padding:8px 5px;}
-    .lb-rank{font-size:12px; width:20px;}
-    .lb-avatar{width:24px; height:24px; font-size:10px;}
-    .lb-name{font-size:12px;}
-    .lb-bar-track{width:50px; height:6px;}
-    .lb-score{font-size:11px; width:60px;}
-    
-    .gauge-grid{flex-wrap:wrap; gap:20px;}
-    .gauge-item svg{width:100px; height:100px;}
-    .gauge-item svg text{font-size:20px;}
-    .gauge-title{font-size:11px; margin-top:5px;}
-    
-    .stamp-avatar{width:80px; height:80px; font-size:30px;}
-    .stamp-name{font-size:28px;}
-    .stamp-badge{font-size:14px; padding:5px 15px;}
-    .quote{font-size:13px; padding:0 10px;}
-    
-    .prod-row{padding:10px; gap:10px;}
-    .prod-rank{font-size:16px; width:20px;}
-    .prod-name{font-size:12px;}
-    .prod-qty{font-size:10px;}
-    .prod-bar-track{width:60px;}
-    .prod-total{font-size:11px; width:50px;}
-    
-    .metric-header{font-size:12px;}
-    .metric-value{font-size:10px;}
-    .metric-bar-bg{height:16px;}
-    .metric-pct{font-size:10px;}
-    
-    .ticker-label{font-size:10px; padding:4px 8px;}
-    .ticker-item{font-size:11px;}
+  @media (min-width: 768px) {
+    .wrap{padding:34px 54px;}
+    .brand-title{font-size:30px;}
+    .clock{font-size:34px;}
+    .dateline{font-size:13px;}
+    .lb-title{font-size:15px; margin-bottom:18px;}
+    .podium{gap:26px; margin:10px 0 30px;}
+    .pod{padding:20px 26px;}
+    .pod.first{height:260px;} .pod.second{height:220px;} .pod.third{height:190px;}
+    .pod .rank{font-size:44px;} .pod .name{font-size:19px;} .pod .score{font-size:15px;}
+    .avatar{width:70px; height:70px; font-size:24px;} .pod.first .avatar{width:90px; height:90px;}
+    .lb-row{gap:20px; padding:12px 18px;} .lb-rank{font-size:18px; width:34px;} .lb-avatar{width:34px; height:34px; font-size:12px;}
+    .lb-name{font-size:17px;} .lb-bar-track{width:260px; height:10px;} .lb-score{font-size:15px; width:110px;}
+    .gauge-grid{gap:60px;} .gauge-item svg{width:180px; height:180px;} .gauge-title{font-size:15px;}
+    .stamp-avatar{width:140px; height:140px; font-size:48px;} .stamp-name{font-size:54px;} .stamp-badge{font-size:20px; padding:8px 26px;}
+    .quote{font-size:22px; max-width:700px;}
+    .prod-row{padding:15px 20px; gap:20px;} .prod-rank{font-size:24px; width:40px;} .prod-name{font-size:18px;} .prod-qty{font-size:13px;}
+    .prod-bar-track{width:200px; height:8px;} .prod-total{font-size:16px; width:80px;}
+    .metric-grid{padding-top:20px;} .metric-row{margin-bottom:28px;} .metric-header{font-size:16px;} .metric-value{font-size:16px;}
+    .metric-bar-bg{height:24px;} .metric-pct{font-size:13px;}
+    .ticker-label{font-size:12px; padding:6px 14px;} .ticker-item{font-size:14.5px;}
+    .dots{gap:8px; margin-top:14px;} .dot{width:8px; height:8px;}
   }
 </style>
 </head>
@@ -207,17 +181,17 @@
     </div>
   </div>
 
-    <div class="stage">
+  <div class="stage">
 
     <!-- SLIDE 1: PODIUM + LEADERBOARD -->
     <div class="slide active" id="slide-0">
       <div class="lb-title">🏆 Ranking Penjualan Bulan Ini</div>
       
       @if($top3->isEmpty() && $rest->isEmpty())
-        <div class="empty-state" style="text-align:center; padding:60px 20px; color:var(--slate);">
+        <div class="empty-state">
           <div style="font-size:40px; margin-bottom:10px;">📊</div>
           <div style="font-size:18px; font-weight:bold; color:var(--paper);">Belum Ada Penjualan</div>
-          <div style="font-size:13px; margin-top:5px;">Data ranking akan muncul setelah ada transaksi order.</div>
+          <div>Data ranking akan muncul setelah ada transaksi order.</div>
         </div>
       @else
         <div class="podium">
@@ -279,7 +253,7 @@
       <div class="gauge-grid">
         @foreach($gauges as $g)
         <div class="gauge-item">
-          <svg width="180" height="180" viewBox="0 0 180 180">
+          <svg width="140" height="140" viewBox="0 0 180 180">
             <circle cx="90" cy="90" r="76" stroke="#233A57" stroke-width="16" fill="none"/>
             <circle cx="90" cy="90" r="76" stroke="{{ $g['color'] }}" stroke-width="16" fill="none"
               stroke-dasharray="477.5" stroke-dashoffset="{{ $g['offset'] }}" stroke-linecap="round" transform="rotate(-90 90 90)"/>
@@ -304,10 +278,10 @@
         <div class="quote">"Kunjungan yang jujur dan konsisten hari ini adalah fondasi kepercayaan mitra esok hari."</div>
       </div>
       @else
-        <div class="empty-state" style="text-align:center; padding:60px 20px; color:var(--slate);">
+        <div class="empty-state">
           <div style="font-size:40px; margin-bottom:10px;">🌟</div>
           <div style="font-size:18px; font-weight:bold; color:var(--paper);">Belum Ada Top Performer</div>
-          <div style="font-size:13px; margin-top:5px;">Top performer akan muncul setelah ada penjualan.</div>
+          <div>Top performer akan muncul setelah ada penjualan.</div>
         </div>
       @endif
     </div>
@@ -332,10 +306,10 @@
         @endforeach
       </div>
       @else
-        <div class="empty-state" style="text-align:center; padding:60px 20px; color:var(--slate);">
+        <div class="empty-state">
           <div style="font-size:40px; margin-bottom:10px;">📦</div>
           <div style="font-size:18px; font-weight:bold; color:var(--paper);">Belum Ada Produk Terjual</div>
-          <div style="font-size:13px; margin-top:5px;">Statistik produk terlaris akan muncul di sini.</div>
+          <div>Statistik produk terlaris akan muncul di sini.</div>
         </div>
       @endif
     </div>
@@ -373,7 +347,10 @@
   <div class="ticker">
     <div class="ticker-label">Live</div>
     <div class="ticker-track">
-      @php $tickerItems = $tickerItems->merge($tickerItems); @endphp
+      @foreach($tickerItems as $t)
+      <span class="ticker-item">{!! $t['text'] !!}</span>
+      @endforeach
+      {{-- Duplikat untuk efek infinite scroll tanpa putus --}}
       @foreach($tickerItems as $t)
       <span class="ticker-item">{!! $t['text'] !!}</span>
       @endforeach
