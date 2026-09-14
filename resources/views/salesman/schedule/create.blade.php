@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="p-5 space-y-5">
-    <a href="{{ route('salesman.home') }}" class="text-sm font-semibold flex items-center gap-1" style="color:var(--slate);">← Kembali</a>
+    <a href="{{ route('salesman.home') }}" class="text-sm font-semibold flex items-center gap-1" style="color:var(--late);">← Kembali</a>
 
     <div>
         <h2 class="display text-xl">Usulkan Jadwal</h2>
@@ -23,7 +23,7 @@
             <div x-data="customerSearch()" class="relative">
                 <label class="block text-xs font-bold mb-2" style="color:var(--slate);">PILIH TOKO MITRA</label>
                 
-                <!-- Hidden input untuk mengirim ID toko ke server (required dihapus agar tidak macet) -->
+                <!-- Hidden input untuk mengirim ID toko ke server -->
                 <input type="hidden" name="customer_id" x-model="selectedId">
                 @error('customer_id') 
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p> 
@@ -45,12 +45,15 @@
                         placeholder="Ketik nama atau kode toko..." 
                         class="w-full text-sm p-3 rounded-lg border" 
                         style="border-color:var(--border);"
+                        enterkeyhint="search"
+                        autocomplete="off"
                     >
                     
-                    <!-- Dropdown Hasil Pencarian -->
+                    <!-- Dropdown Hasil Pencarian (Diubah ke relative agar tertutup keyboard) -->
                     <div x-show="isOpen && search.length > 0" 
                          x-cloak 
-                         class="absolute left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border rounded-lg shadow-lg z-50" 
+                         x-transition
+                         class="relative mt-2 max-h-60 overflow-y-auto bg-white border rounded-lg shadow-sm z-50" 
                          style="border-color:var(--border);">
                         
                         <template x-for="c in filtered" :key="c.id">
@@ -73,7 +76,6 @@
                 <label class="block text-xs font-bold mb-2" style="color:var(--slate);">TANGGAL KUNJUNGAN</label>
                 <div class="grid grid-cols-2 gap-3">
                     <label class="cursor-pointer">
-                        <!-- Menggunakan sr-only agar tetap bisa difokuskan browser saat validasi -->
                         <input type="radio" name="visit_date" value="{{ today()->format('Y-m-d') }}" class="sr-only peer" required>
                         <div class="p-3 text-center rounded-lg border text-sm font-semibold peer-checked:bg-[#1B2A41] peer-checked:text-white transition" style="border-color:var(--border);">
                             Hari Ini<br><span class="text-xs font-normal">{{ today()->translatedFormat('d M') }}</span>
@@ -98,7 +100,6 @@
     </div>
 </div>
 
-<!-- CSS dan Script dipisah ke bawah agar HTML structure clean dan tidak tersangkut -->
 <style>
     [x-cloak] { display: none !important; }
 </style>
@@ -110,7 +111,6 @@
             selectedId: null,
             selectedName: '',
             isOpen: false,
-            // Data dari Laravel di-encode menjadi JSON dan ditempel aman di sini
             customers: @json($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'code' => $c->customer_code])),
             get filtered() {
                 if (this.search.length < 1) return [];
