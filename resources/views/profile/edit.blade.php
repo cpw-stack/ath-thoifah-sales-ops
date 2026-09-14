@@ -144,5 +144,16 @@
             </div>
         </form>
     </div>
+
+    <!-- Tombol Logout -->
+    <div class="card mt-6 p-5 text-center">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="btn w-full" style="background:var(--red); color:#fff;">
+                🚪 Logout dari Akun
+            </button>
+        </form>
+    </div>
+
 </div>
 @endsection
