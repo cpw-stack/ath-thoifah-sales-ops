@@ -142,6 +142,15 @@
 
   <!-- SCREEN DYNAMIC CONTENT -->
   <div class="screen" style="background:var(--paper);">
+    
+    <!-- BANNER INSTALL PWA KUSTOM -->
+    <div id="pwaInstallBanner" style="display:none; padding:12px 15px; background:var(--ink); border-bottom:1px solid var(--border); text-align:center;">
+        <div style="margin-bottom:8px; font-size:12px; font-weight:bold; color:var(--paper);">Pasang aplikasi Ath-Thoifah di HP Anda untuk akses cepat & offline.</div>
+        <button id="pwaInstallBtn" style="background:var(--orange); color:white; border:none; padding:8px 20px; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">
+            📲 Install Sekarang
+        </button>
+    </div>
+
     @yield('content')
   </div>
 
@@ -269,6 +278,46 @@
             window.location.reload();
         }
     }
+
+    // =========================================================
+    // LOGIC CUSTOM INSTALL PWA
+    // =========================================================
+    let deferredPrompt;
+    
+    // PAKSA TOMBOL MUNCUL SELAMA 5 DETIK UNTUK TES (Hapus setelah yakin berfungsi)
+    setTimeout(() => {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) banner.style.display = 'block';
+    }, 5000);
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) banner.style.display = 'block';
+
+        const installBtn = document.getElementById('pwaInstallBtn');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    banner.style.display = 'none';
+                } else {
+                    alert('Chrome sedang dalam masa karantina (cooldown) karena Anda baru saja uninstall. Coba lagi besok atau bersihkan data situs dari pengaturan Chrome.');
+                }
+            });
+        }
+    });
+
+    // Sembunyikan banner jika aplikasi sudah terinstall
+    window.addEventListener('appinstalled', () => {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) banner.style.display = 'none';
+        deferredPrompt = null;
+    });
 </script>
 </body>
 </html>
