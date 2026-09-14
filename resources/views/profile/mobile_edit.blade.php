@@ -111,5 +111,14 @@
             <button type="submit" class="btn-primary w-full text-sm mt-4" style="padding:14px;">Update Password</button>
         </form>
     </div>
+    <!-- Tombol Logout -->
+    <div class="card p-5 text-center mt-6">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="btn-primary w-full text-sm" style="background:var(--red); box-shadow:0 4px 0 #a02f1b; padding:14px;">
+                🚪 Logout dari Akun
+            </button>
+        </form>
+    </div>
 </div>
 @endsection

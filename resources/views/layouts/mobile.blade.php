@@ -168,6 +168,16 @@
   </div>
 </div>
 
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker Registered!', reg))
+                .catch(err => console.log('SW Registration Failed:', err));
+        });
+    }
+</script>
+
 <!-- Simple Script for Clock -->
 <script>
   function updateClock(){
