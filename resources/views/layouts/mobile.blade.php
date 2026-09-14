@@ -7,9 +7,13 @@
 <title>Ath-Thoifah — Sales Force</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1B2A41">
+<!-- Tambahan untuk iOS / iPhone -->
+<link rel="apple-touch-icon" href="/icons/pwa-ath-thoifah-512px.png">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
 <style>
   :root{
     --ink:#1B2A41; --ink-soft:#3A4A63; --paper:#F6F2E9; --paper-dim:#EDE6D6;
